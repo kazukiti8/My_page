@@ -1,0 +1,29 @@
+{
+  "name": "my_page",
+  "version": "1.0.0",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "start": "serve -s . -l 3000",
+    "dev": "serve -s . -l 3000",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kazukiti8/my_page.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/kazukiti8/my_page/issues"
+  },
+  "homepage": "https://github.com/kazukiti8/my_page#readme",
+  "description": "",
+  "dependencies": {
+    "express": "^5.1.0",
+    "serve": "^14.2.1"
+  }
+}
