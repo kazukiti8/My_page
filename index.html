@@ -16,7 +16,6 @@
     <div class="relative z-10 flex-1 flex flex-col">
         <!-- Header with clock and search -->
         <header class="p-4 flex flex-col items-center">
-            <div id="clock" class="text-white text-5xl md:text-6xl font-bold mb-4 text-center fade-in"></div>
             <div class="w-full max-w-2xl">
                 <div class="relative">
                     <input id="search-input" type="text" placeholder="Search with Google..." 
@@ -30,11 +29,16 @@
 
         <!-- Main content area -->
         <main class="flex-1 p-4 grid main-layout" style="grid-template-columns: 1fr 3fr 1fr; grid-template-areas: 'left center right';">
-            <!-- Left column - Clock and weather (placeholder) -->
+            <!-- Left column - Date, time and weather (placeholder) -->
             <div class="left-column p-4" style="grid-area: left;">
                 <div class="blur-bg rounded-xl p-4 mb-4 text-white">
-                    <div id="date" class="text-xl font-semibold"></div>
-                    <div id="day" class="text-lg"></div>
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <div id="date" class="text-xl font-semibold"></div>
+                            <div id="day" class="text-lg"></div>
+                        </div>
+                        <div id="clock" class="text-xl font-semibold text-right"></div>
+                    </div>
                 </div>
                 <div class="blur-bg rounded-xl p-4 text-white">
                     <div class="flex items-center mb-2">
