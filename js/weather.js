@@ -50,12 +50,13 @@ function updateWeatherDisplay() {
     const iconClass = weatherIcons[weatherData.icon] || 'fas fa-cloud';
     
     weatherContainer.innerHTML = `
-        <div class="flex items-center mb-2">
+        <div class="flex items-center mb-2 cursor-pointer hover:bg-white hover:bg-opacity-10 rounded-lg p-2 transition-colors" onclick="window.open('https://weather.yahoo.co.jp/weather/jp/13/4410.html', '_blank')">
             <i class="${iconClass} text-3xl mr-3"></i>
             <div>
                 <div class="text-xl font-semibold">${weatherData.description}</div>
                 <div class="text-sm">${weatherData.location}, ${weatherData.country}</div>
             </div>
+            <i class="fas fa-external-link-alt ml-auto text-sm opacity-60"></i>
         </div>
         <div class="text-2xl font-bold">${weatherData.temperature}°C</div>
         <div class="text-sm mt-1">H: ${weatherData.temp_max}° L: ${weatherData.temp_min}°</div>
@@ -70,12 +71,13 @@ function showDefaultWeather() {
     if (!weatherContainer) return;
 
     weatherContainer.innerHTML = `
-        <div class="flex items-center mb-2">
+        <div class="flex items-center mb-2 cursor-pointer hover:bg-white hover:bg-opacity-10 rounded-lg p-2 transition-colors" onclick="window.open('https://weather.yahoo.co.jp/weather/jp/13/4410.html', '_blank')">
             <i class="fas fa-cloud-sun text-3xl mr-3"></i>
             <div>
                 <div class="text-xl font-semibold">天気情報</div>
                 <div class="text-sm">APIキーを設定してください</div>
             </div>
+            <i class="fas fa-external-link-alt ml-auto text-sm opacity-60"></i>
         </div>
         <div class="text-2xl font-bold">--°C</div>
         <div class="text-sm mt-1">H: --° L: --°</div>
@@ -85,7 +87,44 @@ function showDefaultWeather() {
             OpenWeatherMap APIキーを設定してください
         </div>
         <div id="weather-forecast" class="mt-4 border-t border-white border-opacity-10 pt-2">
-            <div class="text-xs text-gray-300">5日間予報: APIキーが必要です</div>
+            <div class="text-xs font-semibold mb-2">5日間予報</div>
+            <div class="flex justify-between space-x-2">
+                <div class="flex flex-col items-center flex-1 bg-white bg-opacity-10 rounded-lg p-2">
+                    <div class="text-xs font-medium">--</div>
+                    <div class="text-xs text-gray-300">--/--</div>
+                    <i class="fas fa-cloud text-lg my-1"></i>
+                    <div class="text-xs font-semibold">--°</div>
+                    <div class="text-xs text-gray-300">--°/--°</div>
+                </div>
+                <div class="flex flex-col items-center flex-1 bg-white bg-opacity-10 rounded-lg p-2">
+                    <div class="text-xs font-medium">--</div>
+                    <div class="text-xs text-gray-300">--/--</div>
+                    <i class="fas fa-cloud text-lg my-1"></i>
+                    <div class="text-xs font-semibold">--°</div>
+                    <div class="text-xs text-gray-300">--°/--°</div>
+                </div>
+                <div class="flex flex-col items-center flex-1 bg-white bg-opacity-10 rounded-lg p-2">
+                    <div class="text-xs font-medium">--</div>
+                    <div class="text-xs text-gray-300">--/--</div>
+                    <i class="fas fa-cloud text-lg my-1"></i>
+                    <div class="text-xs font-semibold">--°</div>
+                    <div class="text-xs text-gray-300">--°/--°</div>
+                </div>
+                <div class="flex flex-col items-center flex-1 bg-white bg-opacity-10 rounded-lg p-2">
+                    <div class="text-xs font-medium">--</div>
+                    <div class="text-xs text-gray-300">--/--</div>
+                    <i class="fas fa-cloud text-lg my-1"></i>
+                    <div class="text-xs font-semibold">--°</div>
+                    <div class="text-xs text-gray-300">--°/--°</div>
+                </div>
+                <div class="flex flex-col items-center flex-1 bg-white bg-opacity-10 rounded-lg p-2">
+                    <div class="text-xs font-medium">--</div>
+                    <div class="text-xs text-gray-300">--/--</div>
+                    <i class="fas fa-cloud text-lg my-1"></i>
+                    <div class="text-xs font-semibold">--°</div>
+                    <div class="text-xs text-gray-300">--°/--°</div>
+                </div>
+            </div>
         </div>
     `;
 }
@@ -118,19 +157,26 @@ function renderForecast(forecast) {
         container.innerHTML = '<div class="text-xs text-gray-300">予報データなし</div>';
         return;
     }
-    container.innerHTML = forecast.map(day => {
-        const iconClass = weatherIcons[day.icon] || 'fas fa-cloud';
-        const date = new Date(day.date);
-        const dayLabel = date.toLocaleDateString('ja-JP', { weekday: 'short', month: 'numeric', day: 'numeric' });
-        return `
-            <div class="flex items-center justify-between py-1 border-b border-white border-opacity-10 last:border-b-0">
-                <span class="text-xs w-14">${dayLabel}</span>
-                <i class="${iconClass} text-lg mx-2"></i>
-                <span class="text-xs">${day.temp}°C</span>
-                <span class="text-xs text-gray-400">(${day.temp_min}°/${day.temp_max}°)</span>
-            </div>
-        `;
-    }).join('');
+    container.innerHTML = `
+        <div class="text-xs font-semibold mb-2">5日間予報</div>
+        <div class="flex justify-between space-x-2">
+            ${forecast.map(day => {
+                const iconClass = weatherIcons[day.icon] || 'fas fa-cloud';
+                const date = new Date(day.date);
+                const dayLabel = date.toLocaleDateString('ja-JP', { weekday: 'short' });
+                const dateLabel = date.toLocaleDateString('ja-JP', { month: 'numeric', day: 'numeric' });
+                return `
+                    <div class="flex flex-col items-center flex-1 bg-white bg-opacity-10 rounded-lg p-2">
+                        <div class="text-xs font-medium">${dayLabel}</div>
+                        <div class="text-xs text-gray-300">${dateLabel}</div>
+                        <i class="${iconClass} text-lg my-1"></i>
+                        <div class="text-xs font-semibold">${day.temp}°</div>
+                        <div class="text-xs text-gray-300">${day.temp_min}°/${day.temp_max}°</div>
+                    </div>
+                `;
+            }).join('')}
+        </div>
+    `;
 }
 
 // 位置情報を取得して天気データを更新

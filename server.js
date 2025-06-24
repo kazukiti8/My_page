@@ -66,7 +66,16 @@ app.get('/api/weather', async (req, res) => {
         
         const response = await fetch(url);
         if (!response.ok) {
-            throw new Error(`Weather API error: ${response.status}`);
+            const errorText = await response.text();
+            console.error(`Weather API error ${response.status}:`, errorText);
+            
+            if (response.status === 401) {
+                throw new Error(`API認証エラー (401): APIキーが無効です。OpenWeatherMapで有効なAPIキーを取得してください。`);
+            } else if (response.status === 429) {
+                throw new Error(`API制限エラー (429): リクエスト制限に達しました。しばらく待ってから再試行してください。`);
+            } else {
+                throw new Error(`Weather API error: ${response.status} - ${errorText}`);
+            }
         }
         
         const weatherData = await response.json();
@@ -162,33 +171,78 @@ app.get('/api/forecast', async (req, res) => {
             const cityName = city || DEFAULT_CITY;
             url = `https://api.openweathermap.org/data/2.5/forecast?q=${cityName}&appid=${OPENWEATHER_API_KEY}&units=metric&lang=ja`;
         }
+        
+        console.log(`Fetching forecast from: ${url}`);
+        
         const response = await fetch(url);
         if (!response.ok) {
-            throw new Error(`Forecast API error: ${response.status}`);
+            const errorText = await response.text();
+            console.error(`Forecast API error ${response.status}:`, errorText);
+            
+            if (response.status === 401) {
+                throw new Error(`API認証エラー (401): APIキーが無効です。OpenWeatherMapで有効なAPIキーを取得してください。`);
+            } else if (response.status === 429) {
+                throw new Error(`API制限エラー (429): リクエスト制限に達しました。しばらく待ってから再試行してください。`);
+            } else {
+                throw new Error(`Forecast API error: ${response.status} - ${errorText}`);
+            }
         }
+        
         const data = await response.json();
-        // 3時間ごとのデータから1日ごと（正午付近）のデータを抽出
+        
+        // 日別のデータを整理
         const daily = {};
         data.list.forEach(item => {
             const date = item.dt_txt.split(' ')[0];
             const hour = parseInt(item.dt_txt.split(' ')[1].split(':')[0], 10);
-            // 正午（12時）に一番近いデータを採用
-            if (!daily[date] || Math.abs(hour - 12) < Math.abs(daily[date].hour - 12)) {
+            
+            if (!daily[date]) {
                 daily[date] = {
                     date,
-                    hour,
-                    temp: Math.round(item.main.temp),
-                    temp_min: Math.round(item.main.temp_min),
-                    temp_max: Math.round(item.main.temp_max),
-                    description: item.weather[0].description,
-                    icon: item.weather[0].icon,
-                    humidity: item.main.humidity,
-                    wind_speed: Math.round(item.wind.speed)
+                    temps: [],
+                    temp_mins: [],
+                    temp_maxs: [],
+                    descriptions: [],
+                    icons: [],
+                    humidities: [],
+                    wind_speeds: []
                 };
             }
+            
+            daily[date].temps.push(item.main.temp);
+            daily[date].temp_mins.push(item.main.temp_min);
+            daily[date].temp_maxs.push(item.main.temp_max);
+            daily[date].descriptions.push(item.weather[0].description);
+            daily[date].icons.push(item.weather[0].icon);
+            daily[date].humidities.push(item.main.humidity);
+            daily[date].wind_speeds.push(item.wind.speed);
         });
-        // 今日以降の5日分だけ返す
-        const result = Object.values(daily).slice(0, 5);
+        
+        // 各日の最高・最低気温を計算し、正午付近のデータを代表値として使用
+        const result = Object.values(daily).slice(0, 5).map(day => {
+            const temp_min = Math.round(Math.min(...day.temp_mins));
+            const temp_max = Math.round(Math.max(...day.temp_maxs));
+            
+            // 正午（12時）に一番近いデータを代表値として使用
+            const noonIndex = day.temps.length > 0 ? 
+                day.temps.reduce((closest, temp, index) => {
+                    const hour = index * 3; // 3時間ごとのデータなので
+                    return Math.abs(hour - 12) < Math.abs(closest.hour - 12) ? 
+                        { hour, index } : closest;
+                }, { hour: 0, index: 0 }).index : 0;
+            
+            return {
+                date: day.date,
+                temp: Math.round(day.temps[noonIndex]),
+                temp_min,
+                temp_max,
+                description: day.descriptions[noonIndex],
+                icon: day.icons[noonIndex],
+                humidity: day.humidities[noonIndex],
+                wind_speed: Math.round(day.wind_speeds[noonIndex])
+            };
+        });
+        
         res.json(result);
     } catch (error) {
         console.error('Error fetching forecast data:', error);
