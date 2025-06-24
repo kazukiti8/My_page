@@ -15,6 +15,42 @@ const cancelBookmarkBtn = document.getElementById('cancel-bookmark-btn');
 let categories = JSON.parse(localStorage.getItem('categories')) || [];
 let currentCategoryIdForBookmark = null;
 
+// Favicon取得関数
+function getFaviconUrl(url) {
+    try {
+        const urlObj = new URL(url);
+        const domain = urlObj.hostname;
+        
+        // Google Favicon Serviceを使用
+        return `https://www.google.com/s2/favicons?domain=${domain}&sz=32`;
+    } catch (error) {
+        console.warn('Invalid URL for favicon:', url);
+        return null;
+    }
+}
+
+// Favicon表示用のHTML要素を作成
+function createFaviconElement(url, bookmarkName) {
+    const faviconUrl = getFaviconUrl(url);
+    const img = document.createElement('img');
+    img.className = 'w-4 h-4 mr-2 flex-shrink-0';
+    img.alt = `${bookmarkName} favicon`;
+    img.loading = 'lazy';
+    
+    if (faviconUrl) {
+        img.src = faviconUrl;
+        img.onerror = () => {
+            // エラー時はデフォルトアイコンを表示
+            img.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTYiIGhlaWdodD0iMTYiIHZpZXdCb3g9IjAgMCAxNiAxNiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTggMUM0LjEzNDAxIDEgMSA0LjEzNDAxIDEgOEMxIDExLjg2NiA0LjEzNDAxIDE1IDggMTVDMTEuODY2IDE1IDE1IDExLjg2NiAxNSA4QzE1IDQuMTM0MDEgMTEuODY2IDEgOCAxWiIgZmlsbD0iI0M3Q0Y1QyIvPgo8cGF0aCBkPSJNOCA0QzkuNjU2ODUgNCAxMSA1LjM0MzE1IDExIDdDMTEgOC42NTY4NSA5LjY1Njg1IDEwIDggMTBDNi4zNDMxNSA5LjM0MzE1IDUgOC42NTY4NSA1IDdDNSA1LjM0MzE1IDYuMzQzMTUgNCA4IDRaIiBmaWxsPSIjOTRBM0FGIi8+CjxwYXRoIGQ9Ik04IDEyQzYuMzQzMTUgMTIgNSAxMC42NTY5IDUgOUgxMUMxMC42NTY5IDEwIDkuMzQzMTUgMTIgOCAxMloiIGZpbGw9IiM5NEEzQUYiLz4KPC9zdmc+Cg==';
+        };
+    } else {
+        // URLが無効な場合はデフォルトアイコンを表示
+        img.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTYiIGhlaWdodD0iMTYiIHZpZXdCb3g9IjAgMCAxNiAxNiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTggMUM0LjEzNDAxIDEgMSA0LjEzNDAxIDEgOEMxIDExLjg2NiA0LjEzNDAxIDE1IDggMTVDMTEuODY2IDE1IDE1IDExLjg2NiAxNSA4QzE1IDQuMTM0MDEgMTEuODY2IDEgOCAxWiIgZmlsbD0iI0M3Q0Y1QyIvPgo8cGF0aCBkPSJNOCA0QzkuNjU2ODUgNCAxMSA1LjM0MzE1IDExIDdDMTEgOC42NTY4NSA5LjY1Njg1IDEwIDggMTBDNi4zNDMxNSA5LjM0MzE1IDUgOC42NTY4NSA1IDdDNSA1LjM0MzE1IDYuMzQzMTUgNCA4IDRaIiBmaWxsPSIjOTRBM0FGIi8+CjxwYXRoIGQ9Ik04IDEyQzYuMzQzMTUgMTIgNSAxMC42NTY5IDUgOUgxMUMxMC42NTY5IDEwIDkuMzQzMTUgMTIgOCAxMloiIGZpbGw9IiM5NEEzQUYiLz4KPC9zdmc+Cg==';
+    }
+    
+    return img;
+}
+
 export function renderCategories() {
     bookmarksContainer.innerHTML = '';
     
@@ -114,12 +150,21 @@ export function renderCategories() {
                 bookmarkLink.target = '_blank';
                 bookmarkLink.className = 'block';
                 
+                // Faviconとタイトルを横並びで表示
+                const bookmarkHeader = document.createElement('div');
+                bookmarkHeader.className = 'flex items-center mb-1';
+                
+                // Faviconを追加
+                const faviconElement = createFaviconElement(bookmark.url, bookmark.name);
+                bookmarkHeader.appendChild(faviconElement);
+                
                 const bookmarkTitle = document.createElement('div');
-                bookmarkTitle.className = 'font-medium text-gray-800 truncate';
+                bookmarkTitle.className = 'font-medium text-gray-800 truncate flex-1';
                 bookmarkTitle.textContent = bookmark.name;
+                bookmarkHeader.appendChild(bookmarkTitle);
                 
                 const bookmarkUrl = document.createElement('div');
-                bookmarkUrl.className = 'text-xs text-gray-500 truncate mt-1';
+                bookmarkUrl.className = 'text-xs text-gray-500 truncate mt-1 ml-6';
                 bookmarkUrl.textContent = bookmark.url;
                 
                 const bookmarkActions = document.createElement('div');
@@ -195,7 +240,7 @@ export function renderCategories() {
                 bookmarkActions.appendChild(editBookmarkBtn);
                 bookmarkActions.appendChild(deleteBookmarkBtn);
                 
-                bookmarkLink.appendChild(bookmarkTitle);
+                bookmarkLink.appendChild(bookmarkHeader);
                 bookmarkLink.appendChild(bookmarkUrl);
                 bookmarkElement.appendChild(bookmarkLink);
                 bookmarkElement.appendChild(bookmarkActions);
