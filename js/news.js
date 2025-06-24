@@ -48,18 +48,12 @@ function loadNewsFeeds() {
     if (saved) {
         newsFeeds = JSON.parse(saved);
     } else {
-        // デフォルトのニュースフィードを設定（動作するフィードのみ）
+        // デフォルトのニュースフィードを設定（Googleニュースのみ）
         newsFeeds = [
             {
-                id: 'yahoo-news',
-                name: 'Yahoo!ニュース',
-                url: 'https://news.yahoo.co.jp/rss/topics/top-picks.xml',
-                enabled: true
-            },
-            {
-                id: 'nhk-news',
-                name: 'NHKニュース',
-                url: 'https://www3.nhk.or.jp/rss/news/cat0.xml',
+                id: 'google-news-jp',
+                name: 'Googleニュース（日本）',
+                url: 'https://news.google.com/rss?hl=ja&gl=JP&ceid=JP:ja',
                 enabled: true
             }
         ];
@@ -297,6 +291,7 @@ function setupNewsFeedModal() {
     const addFeedBtn = document.getElementById('add-feed-btn');
     const cancelFeedBtn = document.getElementById('cancel-feed-btn');
     const saveFeedBtn = document.getElementById('save-feed-btn');
+    const resetToGoogleBtn = document.getElementById('reset-to-google-btn');
     const feedNameInput = document.getElementById('feed-name-input');
     const feedUrlInput = document.getElementById('feed-url-input');
     const presetFeedsSelect = document.getElementById('preset-feeds');
@@ -317,6 +312,14 @@ function setupNewsFeedModal() {
             const preset = presetFeeds[selectedPreset];
             feedNameInput.value = preset.name;
             feedUrlInput.value = preset.url;
+        }
+    });
+    
+    // Googleニュースのみにリセット
+    resetToGoogleBtn.addEventListener('click', () => {
+        if (confirm('すべてのニュースフィードを削除して、Googleニュースのみにリセットしますか？')) {
+            resetToGoogleNewsOnly();
+            modal.classList.add('hidden');
         }
     });
     
@@ -388,6 +391,12 @@ export function initNews() {
         localStorage.removeItem('resetNewsFeeds');
     }
     
+    // 初回ユーザーまたはリセット希望者の場合、Googleニュースのみに設定
+    const isFirstTime = !localStorage.getItem('newsFeeds');
+    if (isFirstTime) {
+        resetToGoogleNewsOnly();
+    }
+    
     loadNewsFeeds();
     loadNewsItems();
     setupNewsFeedModal();
@@ -410,4 +419,23 @@ export function initNews() {
 // ニュースを再読み込み
 export function refreshNews() {
     fetchAllNews();
-} 
+}
+
+// ニュースフィードをGoogleニュースのみにリセット
+function resetToGoogleNewsOnly() {
+    newsFeeds = [
+        {
+            id: 'google-news-jp',
+            name: 'Googleニュース（日本）',
+            url: 'https://news.google.com/rss?hl=ja&gl=JP&ceid=JP:ja',
+            enabled: true
+        }
+    ];
+    saveNewsFeeds();
+    newsItems = [];
+    saveNewsItems();
+    fetchAllNews();
+}
+
+// グローバル関数として公開（コンソールから実行可能）
+window.resetNewsToGoogleOnly = resetToGoogleNewsOnly; 
