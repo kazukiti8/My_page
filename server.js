@@ -6,7 +6,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // OpenWeatherMap API設定
-const OPENWEATHER_API_KEY = '1c4b5e1a3e08c39828c42a201763997c'; // 実際のAPIキーに置き換えてください
+const OPENWEATHER_API_KEY = '360fc68bd06d2509898efd471f4698fc'; // 新しいAPIキーを設定してください
 const DEFAULT_CITY = 'Tokyo,JP';
 
 // CORSを有効化
@@ -147,6 +147,54 @@ app.get('/api/news', async (req, res) => {
             error: 'Failed to fetch RSS feed',
             details: error.message,
             url: url
+        });
+    }
+});
+
+// 5日間予報API
+app.get('/api/forecast', async (req, res) => {
+    const { lat, lon, city } = req.query;
+    try {
+        let url;
+        if (lat && lon) {
+            url = `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${OPENWEATHER_API_KEY}&units=metric&lang=ja`;
+        } else {
+            const cityName = city || DEFAULT_CITY;
+            url = `https://api.openweathermap.org/data/2.5/forecast?q=${cityName}&appid=${OPENWEATHER_API_KEY}&units=metric&lang=ja`;
+        }
+        const response = await fetch(url);
+        if (!response.ok) {
+            throw new Error(`Forecast API error: ${response.status}`);
+        }
+        const data = await response.json();
+        // 3時間ごとのデータから1日ごと（正午付近）のデータを抽出
+        const daily = {};
+        data.list.forEach(item => {
+            const date = item.dt_txt.split(' ')[0];
+            const hour = parseInt(item.dt_txt.split(' ')[1].split(':')[0], 10);
+            // 正午（12時）に一番近いデータを採用
+            if (!daily[date] || Math.abs(hour - 12) < Math.abs(daily[date].hour - 12)) {
+                daily[date] = {
+                    date,
+                    hour,
+                    temp: Math.round(item.main.temp),
+                    temp_min: Math.round(item.main.temp_min),
+                    temp_max: Math.round(item.main.temp_max),
+                    description: item.weather[0].description,
+                    icon: item.weather[0].icon,
+                    humidity: item.main.humidity,
+                    wind_speed: Math.round(item.wind.speed)
+                };
+            }
+        });
+        // 今日以降の5日分だけ返す
+        const result = Object.values(daily).slice(0, 5);
+        res.json(result);
+    } catch (error) {
+        console.error('Error fetching forecast data:', error);
+        res.status(500).json({
+            error: 'Failed to fetch forecast data',
+            details: error.message
         });
     }
 });

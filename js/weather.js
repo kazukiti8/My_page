@@ -28,13 +28,15 @@ async function fetchWeatherData() {
     try {
         const response = await fetch('/api/weather');
         if (!response.ok) {
-            throw new Error(`Weather data fetch failed: ${response.status}`);
+            console.warn('Weather API not available, showing default weather display');
+            showDefaultWeather();
+            return;
         }
         weatherData = await response.json();
         updateWeatherDisplay();
     } catch (error) {
-        console.error('Error fetching weather data:', error);
-        showWeatherError();
+        console.warn('Error fetching weather data:', error);
+        showDefaultWeather();
     }
 }
 
@@ -58,31 +60,77 @@ function updateWeatherDisplay() {
         <div class="text-2xl font-bold">${weatherData.temperature}°C</div>
         <div class="text-sm mt-1">H: ${weatherData.temp_max}° L: ${weatherData.temp_min}°</div>
         <div class="text-xs mt-1 text-gray-300">湿度: ${weatherData.humidity}% | 風速: ${weatherData.wind_speed}m/s</div>
+        <div id="weather-forecast" class="mt-4 border-t border-white border-opacity-10 pt-2"></div>
     `;
 }
 
-// 天気エラー表示
-function showWeatherError() {
+// デフォルトの天気表示
+function showDefaultWeather() {
     const weatherContainer = document.querySelector('.left-column .blur-bg:last-child');
     if (!weatherContainer) return;
 
     weatherContainer.innerHTML = `
         <div class="flex items-center mb-2">
-            <i class="fas fa-exclamation-triangle text-3xl mr-3 text-yellow-400"></i>
+            <i class="fas fa-cloud-sun text-3xl mr-3"></i>
             <div>
-                <div class="text-xl font-semibold">天気データ取得エラー</div>
-                <div class="text-sm">データを更新できませんでした</div>
+                <div class="text-xl font-semibold">天気情報</div>
+                <div class="text-sm">APIキーを設定してください</div>
             </div>
         </div>
-        <div class="text-sm mt-2">
-            <button id="retry-weather-btn" class="text-blue-400 hover:text-blue-300">
-                <i class="fas fa-sync-alt mr-1"></i>再試行
-            </button>
+        <div class="text-2xl font-bold">--°C</div>
+        <div class="text-sm mt-1">H: --° L: --°</div>
+        <div class="text-xs mt-1 text-gray-300">湿度: --% | 風速: --m/s</div>
+        <div class="text-xs mt-2 text-yellow-400">
+            <i class="fas fa-exclamation-triangle mr-1"></i>
+            OpenWeatherMap APIキーを設定してください
+        </div>
+        <div id="weather-forecast" class="mt-4 border-t border-white border-opacity-10 pt-2">
+            <div class="text-xs text-gray-300">5日間予報: APIキーが必要です</div>
         </div>
     `;
-    
-    // 再試行ボタンのイベントリスナーを追加
-    document.getElementById('retry-weather-btn').addEventListener('click', fetchWeatherData);
+}
+
+// 5日間予報を取得
+async function fetchForecast(lat, lon) {
+    try {
+        let url = '/api/forecast';
+        if (lat && lon) {
+            url += `?lat=${lat}&lon=${lon}`;
+        }
+        const response = await fetch(url);
+        if (!response.ok) {
+            console.warn('Forecast API not available, skipping forecast display');
+            return;
+        }
+        const forecast = await response.json();
+        renderForecast(forecast);
+    } catch (e) {
+        console.warn('Error fetching forecast:', e);
+        // エラーが発生してもアプリケーションを停止させない
+    }
+}
+
+// 5日間予報を表示
+function renderForecast(forecast) {
+    const container = document.getElementById('weather-forecast');
+    if (!container) return;
+    if (!forecast || forecast.length === 0) {
+        container.innerHTML = '<div class="text-xs text-gray-300">予報データなし</div>';
+        return;
+    }
+    container.innerHTML = forecast.map(day => {
+        const iconClass = weatherIcons[day.icon] || 'fas fa-cloud';
+        const date = new Date(day.date);
+        const dayLabel = date.toLocaleDateString('ja-JP', { weekday: 'short', month: 'numeric', day: 'numeric' });
+        return `
+            <div class="flex items-center justify-between py-1 border-b border-white border-opacity-10 last:border-b-0">
+                <span class="text-xs w-14">${dayLabel}</span>
+                <i class="${iconClass} text-lg mx-2"></i>
+                <span class="text-xs">${day.temp}°C</span>
+                <span class="text-xs text-gray-400">(${day.temp_min}°/${day.temp_max}°)</span>
+            </div>
+        `;
+    }).join('');
 }
 
 // 位置情報を取得して天気データを更新
@@ -92,14 +140,17 @@ function getLocationAndWeather() {
             (position) => {
                 const { latitude, longitude } = position.coords;
                 fetchWeatherDataWithCoords(latitude, longitude);
+                fetchForecast(latitude, longitude);
             },
             (error) => {
                 console.log('Location access denied, using default city');
                 fetchWeatherData();
+                fetchForecast();
             }
         );
     } else {
         fetchWeatherData();
+        fetchForecast();
     }
 }
 
@@ -108,13 +159,15 @@ async function fetchWeatherDataWithCoords(lat, lon) {
     try {
         const response = await fetch(`/api/weather?lat=${lat}&lon=${lon}`);
         if (!response.ok) {
-            throw new Error(`Weather data fetch failed: ${response.status}`);
+            console.warn('Weather API not available, showing default weather display');
+            showDefaultWeather();
+            return;
         }
         weatherData = await response.json();
         updateWeatherDisplay();
     } catch (error) {
-        console.error('Error fetching weather data:', error);
-        showWeatherError();
+        console.warn('Error fetching weather data:', error);
+        showDefaultWeather();
     }
 }
 
@@ -126,4 +179,4 @@ export function initWeather() {
 }
 
 // グローバルスコープで利用できるようにする
-window.fetchWeatherData = fetchWeatherData; 
+window.fetchWeatherData = fetchWeatherData;
