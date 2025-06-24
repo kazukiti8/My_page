@@ -11,10 +11,17 @@ export function setupNotesEvents() {
     saveNoteBtn.addEventListener('click', () => {
         notes = notesArea.value;
         localStorage.setItem('notes', notes);
+        
+        // ボタンテキストの一時的な変更
         const originalText = saveNoteBtn.textContent;
         saveNoteBtn.textContent = 'Saved!';
         setTimeout(() => {
             saveNoteBtn.textContent = originalText;
         }, 2000);
+        
+        // 保存完了メッセージを表示
+        if (window.showToast) {
+            window.showToast.success('メモを保存しました');
+        }
     });
 } 

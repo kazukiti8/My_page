@@ -76,13 +76,19 @@ export function setupTodoEvents() {
 
 function addNewTodo() {
     if (newTodoInput.value.trim()) {
+        const todoText = newTodoInput.value.trim();
         todos.push({
-            text: newTodoInput.value.trim(),
+            text: todoText,
             completed: false
         });
         newTodoInput.value = '';
         saveTodos();
         renderTodos();
+        
+        // 保存完了メッセージを表示
+        if (window.showToast) {
+            window.showToast.success(`タスク「${todoText}」を追加しました`);
+        }
     }
 }
 

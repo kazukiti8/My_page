@@ -90,6 +90,11 @@ function addNewsFeed(name, url) {
     newsFeeds.push(newFeed);
     saveNewsFeeds();
     fetchAllNews();
+    
+    // 保存完了メッセージを表示
+    if (window.showToast) {
+        window.showToast.success(`ニュースフィード「${name}」を追加しました`);
+    }
 }
 
 // ニュースフィードを削除
@@ -435,6 +440,11 @@ function resetToGoogleNewsOnly() {
     newsItems = [];
     saveNewsItems();
     fetchAllNews();
+    
+    // リセット完了メッセージを表示
+    if (window.showToast) {
+        window.showToast.info('Googleニュースのみにリセットしました');
+    }
 }
 
 // グローバル関数として公開（コンソールから実行可能）

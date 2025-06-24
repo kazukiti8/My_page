@@ -277,6 +277,11 @@ export function setupBookmarkEvents() {
             saveCategories();
             renderCategories();
             categoryModal.classList.add('hidden');
+            
+            // 保存完了メッセージを表示
+            if (window.showToast) {
+                window.showToast.success(`カテゴリ「${newCategory.name}」を追加しました`);
+            }
         }
     });
     
@@ -308,6 +313,11 @@ export function setupBookmarkEvents() {
                 // Reset form
                 bookmarkNameInput.value = '';
                 bookmarkUrlInput.value = '';
+                
+                // 保存完了メッセージを表示
+                if (window.showToast) {
+                    window.showToast.success(`ブックマーク「${newBookmark.name}」を追加しました`);
+                }
             }
         }
     });

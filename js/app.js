@@ -7,6 +7,8 @@ import { renderTodos, setupTodoEvents } from './todo.js';
 import { loadNotes, setupNotesEvents } from './notes.js';
 import { initNews } from './news.js';
 import { initWeather } from './weather.js';
+import toast from './toast.js';
+import shortcuts from './shortcuts.js';
 
 function init() {
     updateClock();

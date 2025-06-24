@@ -142,12 +142,4 @@ export function setupSearchBox() {
             performSearch(searchInput.value);
         }
     });
-    
-    // キーボードショートカット（Ctrl/Cmd + K）
-    document.addEventListener('keydown', (e) => {
-        if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
-            e.preventDefault();
-            searchInput.focus();
-        }
-    });
 } 
