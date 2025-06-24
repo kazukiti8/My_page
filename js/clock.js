@@ -9,6 +9,6 @@ export function updateClock() {
     const minutes = now.getMinutes().toString().padStart(2, '0');
     const seconds = now.getSeconds().toString().padStart(2, '0');
     clockElement.textContent = `${hours}:${minutes}:${seconds}`;
-    dateElement.textContent = now.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
-    dayElement.textContent = now.toLocaleDateString(undefined, { weekday: 'long' });
+    dateElement.textContent = now.toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric' });
+    dayElement.textContent = now.toLocaleDateString('ja-JP', { weekday: 'long' });
 } 
