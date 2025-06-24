@@ -6,6 +6,7 @@ import { renderCategories, setupBookmarkEvents } from './bookmarks.js';
 import { renderTodos, setupTodoEvents } from './todo.js';
 import { loadNotes, setupNotesEvents } from './notes.js';
 import { initNews } from './news.js';
+import { initWeather } from './weather.js';
 
 function init() {
     updateClock();
@@ -15,6 +16,7 @@ function init() {
     renderTodos();
     loadNotes();
     initNews();
+    initWeather();
     setupSearchBox();
     setupBookmarkEvents();
     setupTodoEvents();

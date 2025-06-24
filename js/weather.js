@@ -1,7 +1,7 @@
 // 天気データの管理
 let weatherData = null;
 
-// 天気アイコンのマッピング
+// 天気アイコンのマッピング（OpenWeatherMap API用）
 const weatherIcons = {
     '01d': 'fas fa-sun',           // 晴れ
     '01n': 'fas fa-moon',          // 晴れ（夜）

@@ -5,6 +5,10 @@ const Parser = require('rss-parser');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// OpenWeatherMap API設定
+const OPENWEATHER_API_KEY = '1c4b5e1a3e08c39828c42a201763997c'; // 実際のAPIキーに置き換えてください
+const DEFAULT_CITY = 'Tokyo,JP';
+
 // CORSを有効化
 app.use(cors());
 
@@ -41,6 +45,57 @@ const parser = new Parser({
 // ルートパスでindex.htmlを配信
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
+});
+
+// 天気予報取得API
+app.get('/api/weather', async (req, res) => {
+    const { lat, lon, city } = req.query;
+    
+    try {
+        let url;
+        if (lat && lon) {
+            // 緯度・経度で天気を取得
+            url = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${OPENWEATHER_API_KEY}&units=metric&lang=ja`;
+        } else {
+            // 都市名で天気を取得
+            const cityName = city || DEFAULT_CITY;
+            url = `https://api.openweathermap.org/data/2.5/weather?q=${cityName}&appid=${OPENWEATHER_API_KEY}&units=metric&lang=ja`;
+        }
+        
+        console.log(`Fetching weather from: ${url}`);
+        
+        const response = await fetch(url);
+        if (!response.ok) {
+            throw new Error(`Weather API error: ${response.status}`);
+        }
+        
+        const weatherData = await response.json();
+        
+        // 天気データを整形
+        const formattedWeather = {
+            temperature: Math.round(weatherData.main.temp),
+            temp_min: Math.round(weatherData.main.temp_min),
+            temp_max: Math.round(weatherData.main.temp_max),
+            humidity: weatherData.main.humidity,
+            wind_speed: Math.round(weatherData.wind.speed),
+            description: weatherData.weather[0].description,
+            icon: weatherData.weather[0].icon,
+            location: weatherData.name,
+            country: weatherData.sys.country,
+            timestamp: new Date().toISOString()
+        };
+        
+        console.log(`Weather data for ${formattedWeather.location}: ${formattedWeather.temperature}°C`);
+        
+        res.json(formattedWeather);
+        
+    } catch (error) {
+        console.error('Error fetching weather data:', error);
+        res.status(500).json({ 
+            error: 'Failed to fetch weather data',
+            details: error.message 
+        });
+    }
 });
 
 // ニュースフィード取得API
