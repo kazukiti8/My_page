@@ -5,6 +5,7 @@ import { setupSearchBox } from './search.js';
 import { renderCategories, setupBookmarkEvents } from './bookmarks.js';
 import { renderTodos, setupTodoEvents } from './todo.js';
 import { loadNotes, setupNotesEvents } from './notes.js';
+import { initNews } from './news.js';
 
 function init() {
     updateClock();
@@ -13,6 +14,7 @@ function init() {
     renderCategories();
     renderTodos();
     loadNotes();
+    initNews();
     setupSearchBox();
     setupBookmarkEvents();
     setupTodoEvents();

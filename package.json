@@ -6,8 +6,9 @@
     "doc": "docs"
   },
   "scripts": {
-    "start": "serve -s . -l 3000",
-    "dev": "serve -s . -l 3000",
+    "start": "node server.js",
+    "dev": "node server.js",
+    "serve": "serve -s . -l 3000",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -23,7 +24,9 @@
   "homepage": "https://github.com/kazukiti8/my_page#readme",
   "description": "",
   "dependencies": {
+    "cors": "^2.8.5",
     "express": "^5.1.0",
+    "rss-parser": "^3.13.0",
     "serve": "^14.2.1"
   }
 }
