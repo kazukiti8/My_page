@@ -9,6 +9,7 @@ import { initNews } from './news.js';
 import { initWeather } from './weather.js';
 import toast from './toast.js';
 import shortcuts from './shortcuts.js';
+import themeManager from './theme.js';
 
 function init() {
     updateClock();
