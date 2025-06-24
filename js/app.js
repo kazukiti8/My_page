@@ -10,6 +10,7 @@ import { initWeather } from './weather.js';
 import toast from './toast.js';
 import shortcuts from './shortcuts.js';
 import themeManager from './theme.js';
+import widgetManager from './widgets.js';
 
 function init() {
     updateClock();
@@ -24,6 +25,7 @@ function init() {
     setupBookmarkEvents();
     setupTodoEvents();
     setupNotesEvents();
+    widgetManager.applyWidgetSettings();
 }
 
 document.addEventListener('DOMContentLoaded', init); 

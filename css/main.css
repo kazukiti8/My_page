@@ -1355,4 +1355,24 @@ body {
 
 .theme-dark ::-webkit-scrollbar-thumb:hover {
     background: rgba(255, 255, 255, 0.3);
+}
+
+/* --- ウィジェットサイズ --- */
+.widget-small {
+    min-width: 180px;
+    max-width: 250px;
+    font-size: 0.85em;
+    padding: 10px 10px;
+}
+.widget-normal {
+    min-width: 280px;
+    max-width: 100%;
+    font-size: 1em;
+    padding: 25px;
+}
+.widget-large {
+    min-width: 350px;
+    max-width: 100%;
+    font-size: 1.15em;
+    padding: 40px 30px;
 } 
