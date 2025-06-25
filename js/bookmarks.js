@@ -296,17 +296,6 @@ export function renderCategories() {
                 bookmarkTitle.textContent = bookmark.name;
                 bookmarkContent.appendChild(bookmarkTitle);
                 
-                // URLのドメインを表示
-                try {
-                    const domain = new URL(bookmark.url).hostname;
-                    const domainElement = document.createElement('div');
-                    domainElement.className = 'text-xs text-gray-500 truncate';
-                    domainElement.textContent = domain;
-                    bookmarkContent.appendChild(domainElement);
-                } catch (e) {
-                    // URLが無効な場合は何も表示しない
-                }
-                
                 bookmarkHeader.appendChild(bookmarkContent);
                 
                 const bookmarkActions = document.createElement('div');
