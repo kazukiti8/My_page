@@ -15,37 +15,83 @@ const cancelBookmarkBtn = document.getElementById('cancel-bookmark-btn');
 let categories = JSON.parse(localStorage.getItem('categories')) || [];
 let currentCategoryIdForBookmark = null;
 
-// Favicon取得関数
+// Faviconキャッシュ
+const faviconCache = new Map();
+
+// Favicon取得関数（改善版）
 function getFaviconUrl(url) {
     try {
         const urlObj = new URL(url);
         const domain = urlObj.hostname;
         
-        // Google Favicon Serviceを使用
-        return `https://www.google.com/s2/favicons?domain=${domain}&sz=32`;
+        // キャッシュをチェック
+        if (faviconCache.has(domain)) {
+            return faviconCache.get(domain);
+        }
+        
+        // 複数のFaviconサービスを試行
+        const faviconServices = [
+            `https://www.google.com/s2/favicons?domain=${domain}&sz=32`,
+            `https://favicon.ico/${domain}`,
+            `https://${domain}/favicon.ico`
+        ];
+        
+        const faviconUrl = faviconServices[0]; // 最初のサービスを返す
+        
+        // キャッシュに保存
+        faviconCache.set(domain, faviconUrl);
+        
+        return faviconUrl;
     } catch (error) {
         console.warn('Invalid URL for favicon:', url);
         return null;
     }
 }
 
-// Favicon表示用のHTML要素を作成
+// Favicon表示用のHTML要素を作成（改善版）
 function createFaviconElement(url, bookmarkName) {
     const faviconUrl = getFaviconUrl(url);
     const img = document.createElement('img');
-    img.className = 'w-4 h-4 mr-2 flex-shrink-0';
+    img.className = 'w-5 h-5 mr-3 flex-shrink-0 rounded-sm';
     img.alt = `${bookmarkName} favicon`;
     img.loading = 'lazy';
     
+    // デフォルトアイコン（SVG）
+    const defaultIcon = `
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect width="20" height="20" rx="4" fill="#E5E7EB"/>
+            <path d="M10 6C11.1046 6 12 6.89543 12 8C12 9.10457 11.1046 10 10 10C8.89543 10 8 9.10457 8 8C8 6.89543 8.89543 6 10 6Z" fill="#9CA3AF"/>
+            <path d="M10 12C8.89543 12 8 10.8954 8 9.75H12C12 10.8954 11.1046 12 10 12Z" fill="#9CA3AF"/>
+        </svg>
+    `;
+    
     if (faviconUrl) {
+        // 読み込み中の表示
+        img.style.opacity = '0.5';
         img.src = faviconUrl;
+        
         img.onerror = () => {
             // エラー時はデフォルトアイコンを表示
-            img.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTYiIGhlaWdodD0iMTYiIHZpZXdCb3g9IjAgMCAxNiAxNiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTggMUM0LjEzNDAxIDEgMSA0LjEzNDAxIDEgOEMxIDExLjg2NiA0LjEzNDAxIDE1IDggMTVDMTEuODY2IDE1IDE1IDExLjg2NiAxNSA4QzE1IDQuMTM0MDEgMTEuODY2IDEgOCAxWiIgZmlsbD0iI0M3Q0Y1QyIvPgo8cGF0aCBkPSJNOCA0QzkuNjU2ODUgNCAxMSA1LjM0MzE1IDExIDdDMTEgOC42NTY4NSA5LjY1Njg1IDEwIDggMTBDNi4zNDMxNSA5LjM0MzE1IDUgOC42NTY4NSA1IDdDNSA1LjM0MzE1IDYuMzQzMTUgNCA4IDRaIiBmaWxsPSIjOTRBM0FGIi8+CjxwYXRoIGQ9Ik04IDEyQzYuMzQzMTUgMTIgNSAxMC42NTY5IDUgOUgxMUMxMC42NTY5IDEwIDkuMzQzMTUgMTIgOCAxMloiIGZpbGw9IiM5NEEzQUYiLz4KPC9zdmc+Cg==';
+            img.style.display = 'none';
+            const fallbackIcon = document.createElement('div');
+            fallbackIcon.className = 'w-5 h-5 mr-3 flex-shrink-0';
+            fallbackIcon.innerHTML = defaultIcon;
+            img.parentNode.insertBefore(fallbackIcon, img);
+        };
+        
+        img.onload = () => {
+            // 読み込み成功時は画像を表示
+            img.style.display = 'block';
+            img.style.opacity = '1';
+            img.style.transition = 'opacity 0.3s ease';
         };
     } else {
         // URLが無効な場合はデフォルトアイコンを表示
-        img.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTYiIGhlaWdodD0iMTYiIHZpZXdCb3g9IjAgMCAxNiAxNiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTggMUM0LjEzNDAxIDEgMSA0LjEzNDAxIDEgOEMxIDExLjg2NiA0LjEzNDAxIDE1IDggMTVDMTEuODY2IDE1IDE1IDExLjg2NiAxNSA4QzE1IDQuMTM0MDEgMTEuODY2IDEgOCAxWiIgZmlsbD0iI0M3Q0Y1QyIvPgo8cGF0aCBkPSJNOCA0QzkuNjU2ODUgNCAxMSA1LjM0MzE1IDExIDdDMTEgOC42NTY4NSA5LjY1Njg1IDEwIDggMTBDNi4zNDMxNSA5LjM0MzE1IDUgOC42NTY4NSA1IDdDNSA1LjM0MzE1IDYuMzQzMTUgNCA4IDRaIiBmaWxsPSIjOTRBM0FGIi8+CjxwYXRoIGQ9Ik04IDEyQzYuMzQzMTUgMTIgNSAxMC42NTY5IDUgOUgxMUMxMC42NTY5IDEwIDkuMzQzMTUgMTIgOCAxMloiIGZpbGw9IiM5NEEzQUYiLz4KPC9zdmc+Cg==';
+        img.style.display = 'none';
+        const fallbackIcon = document.createElement('div');
+        fallbackIcon.className = 'w-5 h-5 mr-3 flex-shrink-0';
+        fallbackIcon.innerHTML = defaultIcon;
+        return fallbackIcon;
     }
     
     return img;
@@ -152,19 +198,19 @@ export function renderCategories() {
                 
                 // Faviconとタイトルを横並びで表示
                 const bookmarkHeader = document.createElement('div');
-                bookmarkHeader.className = 'flex items-center mb-1';
+                bookmarkHeader.className = 'flex items-center mb-2';
                 
                 // Faviconを追加
                 const faviconElement = createFaviconElement(bookmark.url, bookmark.name);
                 bookmarkHeader.appendChild(faviconElement);
                 
                 const bookmarkTitle = document.createElement('div');
-                bookmarkTitle.className = 'font-medium text-gray-800 truncate flex-1';
+                bookmarkTitle.className = 'font-medium text-gray-800 truncate flex-1 text-sm';
                 bookmarkTitle.textContent = bookmark.name;
                 bookmarkHeader.appendChild(bookmarkTitle);
                 
                 const bookmarkUrl = document.createElement('div');
-                bookmarkUrl.className = 'text-xs text-gray-500 truncate mt-1 ml-6';
+                bookmarkUrl.className = 'text-xs text-gray-500 truncate ml-8';
                 bookmarkUrl.textContent = bookmark.url;
                 
                 const bookmarkActions = document.createElement('div');
