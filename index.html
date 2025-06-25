@@ -58,9 +58,14 @@
                 <div class="blur-bg rounded-xl p-4">
                     <div class="flex justify-between items-center mb-4">
                         <h2 class="text-xl font-bold text-white">My Bookmarks</h2>
-                        <button id="add-category-btn" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded-full text-sm flex items-center">
-                            <i class="fas fa-plus mr-1"></i> Add Category
-                        </button>
+                        <div class="flex space-x-2">
+                            <button id="refresh-favicons-btn" class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded-full text-sm flex items-center" title="Faviconを更新">
+                                <i class="fas fa-sync-alt mr-1"></i> Favicon
+                            </button>
+                            <button id="add-category-btn" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded-full text-sm flex items-center">
+                                <i class="fas fa-plus mr-1"></i> Add Category
+                            </button>
+                        </div>
                     </div>
 
                     <div id="bookmarks-container">

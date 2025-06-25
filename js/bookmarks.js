@@ -1,4 +1,6 @@
 // ブックマーク管理
+import faviconService from './favicon-service.js';
+
 const bookmarksContainer = document.getElementById('bookmarks-container');
 const addCategoryBtn = document.getElementById('add-category-btn');
 const categoryModal = document.getElementById('category-modal');
@@ -15,46 +17,10 @@ const cancelBookmarkBtn = document.getElementById('cancel-bookmark-btn');
 let categories = JSON.parse(localStorage.getItem('categories')) || [];
 let currentCategoryIdForBookmark = null;
 
-// Faviconキャッシュ
-const faviconCache = new Map();
-
-// Favicon取得関数（改善版）
-function getFaviconUrl(url) {
-    try {
-        const urlObj = new URL(url);
-        const domain = urlObj.hostname;
-        
-        // キャッシュをチェック
-        if (faviconCache.has(domain)) {
-            return faviconCache.get(domain);
-        }
-        
-        // 複数のFaviconサービスを試行
-        const faviconServices = [
-            `https://www.google.com/s2/favicons?domain=${domain}&sz=32`,
-            `https://favicon.ico/${domain}`,
-            `https://${domain}/favicon.ico`
-        ];
-        
-        const faviconUrl = faviconServices[0]; // 最初のサービスを返す
-        
-        // キャッシュに保存
-        faviconCache.set(domain, faviconUrl);
-        
-        return faviconUrl;
-    } catch (error) {
-        console.warn('Invalid URL for favicon:', url);
-        return null;
-    }
-}
-
-// Favicon表示用のHTML要素を作成（改善版）
+// 改善されたFavicon表示用のHTML要素を作成
 function createFaviconElement(url, bookmarkName) {
-    const faviconUrl = getFaviconUrl(url);
-    const img = document.createElement('img');
-    img.className = 'w-5 h-5 mr-3 flex-shrink-0 rounded-sm';
-    img.alt = `${bookmarkName} favicon`;
-    img.loading = 'lazy';
+    const container = document.createElement('div');
+    container.className = 'w-5 h-5 mr-3 flex-shrink-0 relative';
     
     // デフォルトアイコン（SVG）
     const defaultIcon = `
@@ -65,37 +31,80 @@ function createFaviconElement(url, bookmarkName) {
         </svg>
     `;
     
-    if (faviconUrl) {
-        // 読み込み中の表示
-        img.style.opacity = '0.5';
-        img.src = faviconUrl;
-        
-        img.onerror = () => {
-            // エラー時はデフォルトアイコンを表示
-            img.style.display = 'none';
-            const fallbackIcon = document.createElement('div');
-            fallbackIcon.className = 'w-5 h-5 mr-3 flex-shrink-0';
-            fallbackIcon.innerHTML = defaultIcon;
-            img.parentNode.insertBefore(fallbackIcon, img);
-        };
-        
-        img.onload = () => {
-            // 読み込み成功時は画像を表示
-            img.style.display = 'block';
-            img.style.opacity = '1';
+    // デフォルトアイコンを表示
+    const fallbackIcon = document.createElement('div');
+    fallbackIcon.className = 'w-5 h-5';
+    fallbackIcon.innerHTML = defaultIcon;
+    container.appendChild(fallbackIcon);
+    
+    // 実際のFaviconを非同期で読み込み
+    faviconService.getFavicon(url, 20).then(faviconUrl => {
+        if (faviconUrl && !faviconUrl.startsWith('data:')) {
+            const img = document.createElement('img');
+            img.className = 'w-5 h-5 absolute top-0 left-0 rounded-sm';
+            img.alt = `${bookmarkName} favicon`;
+            img.loading = 'lazy';
+            img.style.opacity = '0';
             img.style.transition = 'opacity 0.3s ease';
-        };
-    } else {
-        // URLが無効な場合はデフォルトアイコンを表示
-        img.style.display = 'none';
-        const fallbackIcon = document.createElement('div');
-        fallbackIcon.className = 'w-5 h-5 mr-3 flex-shrink-0';
-        fallbackIcon.innerHTML = defaultIcon;
-        return fallbackIcon;
+            
+            img.onload = () => {
+                img.style.opacity = '1';
+                fallbackIcon.style.display = 'none';
+            };
+            
+            img.onerror = () => {
+                // エラー時はデフォルトアイコンを維持
+                img.remove();
+            };
+            
+            img.src = faviconUrl;
+            container.appendChild(img);
+        }
+    }).catch(error => {
+        console.debug('Favicon loading failed for:', url, error);
+        // エラー時はデフォルトアイコンを維持
+    });
+    
+    return container;
+}
+
+// バッチ処理でFaviconを更新
+async function refreshAllFavicons() {
+    const allUrls = [];
+    const urlToElement = new Map();
+    
+    // すべてのブックマークURLを収集
+    categories.forEach(category => {
+        if (category.bookmarks) {
+            category.bookmarks.forEach(bookmark => {
+                allUrls.push(bookmark.url);
+                urlToElement.set(bookmark.url, bookmark);
+            });
+        }
+    });
+    
+    if (allUrls.length === 0) return;
+    
+    // バッチ処理でFaviconを取得
+    const faviconResults = await faviconService.getFaviconsBatch(allUrls, 20);
+    
+    // 結果をログに記録
+    const stats = faviconService.getCacheStats();
+    console.log('Favicon refresh completed:', stats);
+    
+    // 成功メッセージを表示
+    if (window.showToast) {
+        window.showToast.success(`${stats.cachedDomains}個のFaviconを更新しました`);
     }
     
-    return img;
+    // ブックマーク表示を再描画
+    renderCategories();
 }
+
+// グローバル関数として公開（開発者ツールから呼び出し可能）
+window.refreshAllFavicons = refreshAllFavicons;
+window.getFaviconStats = () => faviconService.getCacheStats();
+window.clearFaviconCache = () => faviconService.clearCache();
 
 export function renderCategories() {
     bookmarksContainer.innerHTML = '';
@@ -189,7 +198,7 @@ export function renderCategories() {
         if (category.bookmarks && category.bookmarks.length > 0) {
             category.bookmarks.forEach(bookmark => {
                 const bookmarkElement = document.createElement('div');
-                bookmarkElement.className = 'bg-white bg-opacity-70 hover:bg-opacity-90 rounded-lg p-3 transition-all duration-200 bookmark-item relative';
+                bookmarkElement.className = 'bg-white bg-opacity-70 hover:bg-opacity-90 rounded-lg p-3 transition-all duration-200 bookmark-item relative group';
                 
                 const bookmarkLink = document.createElement('a');
                 bookmarkLink.href = bookmark.url;
@@ -200,7 +209,7 @@ export function renderCategories() {
                 const bookmarkHeader = document.createElement('div');
                 bookmarkHeader.className = 'flex items-center mb-2';
                 
-                // Faviconを追加
+                // 改善されたFaviconを追加
                 const faviconElement = createFaviconElement(bookmark.url, bookmark.name);
                 bookmarkHeader.appendChild(faviconElement);
                 
@@ -214,7 +223,7 @@ export function renderCategories() {
                 bookmarkUrl.textContent = bookmark.url;
                 
                 const bookmarkActions = document.createElement('div');
-                bookmarkActions.className = 'absolute top-2 right-2 flex space-x-1 bookmark-actions transition-opacity duration-200';
+                bookmarkActions.className = 'absolute top-2 right-2 flex space-x-1 bookmark-actions opacity-0 group-hover:opacity-100 transition-opacity duration-200';
                 
                 const editBookmarkBtn = document.createElement('button');
                 editBookmarkBtn.className = 'bg-blue-500 hover:bg-blue-600 text-white px-1 py-1 rounded text-xs';
@@ -306,6 +315,27 @@ export function renderCategories() {
 }
 
 export function setupBookmarkEvents() {
+    // Favicon更新ボタン
+    const refreshFaviconsBtn = document.getElementById('refresh-favicons-btn');
+    if (refreshFaviconsBtn) {
+        refreshFaviconsBtn.addEventListener('click', async () => {
+            refreshFaviconsBtn.disabled = true;
+            refreshFaviconsBtn.innerHTML = '<i class="fas fa-spinner animate-spin mr-1"></i> 更新中...';
+            
+            try {
+                await refreshAllFavicons();
+            } catch (error) {
+                console.error('Error refreshing favicons:', error);
+                if (window.showToast) {
+                    window.showToast.error('Faviconの更新に失敗しました');
+                }
+            } finally {
+                refreshFaviconsBtn.disabled = false;
+                refreshFaviconsBtn.innerHTML = '<i class="fas fa-sync-alt mr-1"></i> Favicon';
+            }
+        });
+    }
+
     // Category modal
     addCategoryBtn.addEventListener('click', () => {
         categoryNameInput.value = '';
