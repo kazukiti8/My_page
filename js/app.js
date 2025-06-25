@@ -11,21 +11,58 @@ import toast from './toast.js';
 import shortcuts from './shortcuts.js';
 import themeManager from './theme.js';
 import widgetManager from './widgets.js';
+import errorHandler from './error-handler.js';
 
 function init() {
-    updateClock();
-    setInterval(updateClock, 1000);
-    loadBackgroundImage();
-    renderCategories();
-    renderTodos();
-    loadNotes();
-    initNews();
-    initWeather();
-    setupSearchBox();
-    setupBookmarkEvents();
-    setupTodoEvents();
-    setupNotesEvents();
-    widgetManager.applyWidgetSettings();
+    try {
+        // エラーハンドラーの初期化
+        console.log('🔒 エラーハンドリングシステムを初期化中...');
+        
+        // 各モジュールの初期化
+        updateClock();
+        setInterval(updateClock, 1000);
+        loadBackgroundImage();
+        renderCategories();
+        renderTodos();
+        loadNotes();
+        initNews();
+        initWeather();
+        setupSearchBox();
+        setupBookmarkEvents();
+        setupTodoEvents();
+        setupNotesEvents();
+        widgetManager.applyWidgetSettings();
+        
+        // 初期化完了メッセージ
+        console.log('✅ アプリケーションの初期化が完了しました');
+        
+        // 成功メッセージを表示
+        if (window.showToast) {
+            window.showToast.success('アプリケーションが正常に起動しました', 2000);
+        }
+        
+    } catch (error) {
+        console.error('アプリケーション初期化エラー:', error);
+        
+        // エラーハンドラーを使用
+        if (window.errorHandler) {
+            window.errorHandler.handleError('AppInit', error, {
+                retry: false,
+                showModal: true
+            });
+        }
+    }
 }
 
-document.addEventListener('DOMContentLoaded', init); 
+// ページ読み込み完了時の初期化
+document.addEventListener('DOMContentLoaded', init);
+
+// ページ離脱時のエラーログ保存
+window.addEventListener('beforeunload', () => {
+    if (window.errorHandler) {
+        const stats = window.errorHandler.getErrorStats();
+        if (Object.keys(stats).length > 0) {
+            console.log('📊 セッション中のエラー統計:', stats);
+        }
+    }
+}); 

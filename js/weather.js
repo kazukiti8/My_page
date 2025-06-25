@@ -3,6 +3,8 @@ let weatherData = null;
 let forecastData = null;
 let isLoading = false;
 let lastUpdate = null;
+let retryCount = 0;
+const maxRetries = 3;
 
 // 天気アイコンのマッピング（OpenWeatherMap API用）
 const weatherIcons = {
@@ -42,6 +44,7 @@ async function fetchWeatherData() {
         
         weatherData = await response.json();
         lastUpdate = new Date();
+        retryCount = 0; // 成功時にリトライカウントをリセット
         updateWeatherDisplay();
         
         // 成功メッセージを表示
@@ -51,12 +54,21 @@ async function fetchWeatherData() {
         
     } catch (error) {
         console.error('Error fetching weather data:', error);
+        retryCount++;
+        
+        // エラーハンドラーを使用
+        if (window.errorHandler) {
+            window.errorHandler.handleError('Weather', error, {
+                retry: retryCount <= maxRetries,
+                retryFunction: () => {
+                    console.log(`Retrying weather fetch (attempt ${retryCount})`);
+                    setTimeout(fetchWeatherData, 2000);
+                }
+            });
+        }
+        
         showWeatherError(error.message);
         
-        // エラーメッセージを表示
-        if (window.showToast) {
-            window.showToast.error('天気情報の取得に失敗しました');
-        }
     } finally {
         isLoading = false;
     }
@@ -138,6 +150,14 @@ function showWeatherError(errorMessage) {
     const weatherContainer = document.querySelector('.left-column .blur-bg:last-child');
     if (!weatherContainer) return;
 
+    const retryButton = retryCount < maxRetries ? 
+        `<button onclick="refreshWeather()" class="text-blue-400 hover:text-blue-300 transition-colors" title="再試行">
+            <i class="fas fa-redo"></i>
+        </button>` : 
+        `<button onclick="refreshWeather()" class="text-gray-400 hover:text-gray-300 transition-colors" title="手動で再試行">
+            <i class="fas fa-redo"></i>
+        </button>`;
+
     weatherContainer.innerHTML = `
         <div class="flex items-center justify-between mb-3">
             <div class="flex items-center cursor-pointer hover:bg-white hover:bg-opacity-10 rounded-lg p-2 transition-colors" onclick="window.open('https://weather.yahoo.co.jp/weather/jp/13/4410.html', '_blank')">
@@ -148,9 +168,7 @@ function showWeatherError(errorMessage) {
                 </div>
                 <i class="fas fa-external-link-alt ml-2 text-sm opacity-60"></i>
             </div>
-            <button onclick="refreshWeather()" class="text-blue-400 hover:text-blue-300 transition-colors" title="再試行">
-                <i class="fas fa-redo"></i>
-            </button>
+            ${retryButton}
         </div>
         <div class="text-3xl font-bold mb-2">--°C</div>
         <div class="text-sm mb-2">H: --° | L: --°</div>
@@ -158,6 +176,7 @@ function showWeatherError(errorMessage) {
         <div class="text-xs mt-3 p-2 bg-red-50 bg-opacity-50 rounded-lg border border-red-200 border-opacity-50">
             <i class="fas fa-exclamation-triangle text-red-400 mr-1"></i>
             <span class="text-red-300">${errorMessage}</span>
+            ${retryCount > 0 ? `<br><span class="text-xs text-gray-400">再試行回数: ${retryCount}/${maxRetries}</span>` : ''}
         </div>
         <div id="weather-forecast" class="mt-4 border-t border-white border-opacity-10 pt-3">
             <div class="text-center py-4">
@@ -185,6 +204,15 @@ async function fetchForecast(lat, lon) {
         renderForecast(forecast);
     } catch (error) {
         console.error('Error fetching forecast:', error);
+        
+        // エラーハンドラーを使用
+        if (window.errorHandler) {
+            window.errorHandler.handleError('Forecast', error, {
+                retry: false, // 予報は重要ではないのでリトライしない
+                showToast: false // 予報エラーは静かに処理
+            });
+        }
+        
         showForecastError(error.message);
     }
 }

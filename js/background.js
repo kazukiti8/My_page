@@ -1,5 +1,7 @@
 // 背景画像の管理（サーバーサイドAPI経由）
 const backgroundElement = document.getElementById('background');
+let retryCount = 0;
+const maxRetries = 3;
 
 export function loadBackgroundImage() {
     const query = 'nature,landscape,scenic,peaceful';
@@ -24,15 +26,41 @@ export function loadBackgroundImage() {
                 if (data.photographer) {
                     localStorage.setItem('lastBackgroundPhotographer', data.photographer);
                 }
+                
+                // 成功時にリトライカウントをリセット
+                retryCount = 0;
+                
             } else if (data.fallback) {
                 // フォールバック画像を使用
                 backgroundElement.style.backgroundImage = `url(${data.fallback})`;
                 backgroundElement.style.opacity = '1';
                 console.warn('Using fallback background image');
+                
+                // エラーハンドラーを使用
+                if (window.errorHandler) {
+                    window.errorHandler.handleError('Background', new Error('Using fallback image'), {
+                        retry: false,
+                        showToast: false
+                    });
+                }
             }
         })
         .catch(error => {
             console.error('Error loading background image:', error);
+            retryCount++;
+            
+            // エラーハンドラーを使用
+            if (window.errorHandler) {
+                window.errorHandler.handleError('Background', error, {
+                    retry: retryCount <= maxRetries,
+                    retryFunction: () => {
+                        console.log(`Retrying background image load (attempt ${retryCount})`);
+                        setTimeout(loadBackgroundImage, 3000);
+                    },
+                    showToast: false // 背景画像エラーは静かに処理
+                });
+            }
+            
             // デフォルトのフォールバック画像
             backgroundElement.style.backgroundImage = 'url(https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?ixlib=rb-1.2.1&auto=format&fit=crop&w=1920&q=80)';
             backgroundElement.style.opacity = '1';

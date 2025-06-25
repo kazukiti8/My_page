@@ -3,6 +3,7 @@ let newsFeeds = [];
 let newsItems = [];
 let isLoading = false;
 let lastUpdate = null;
+let failedFeeds = new Set(); // 失敗したフィードを追跡
 
 // プリセットフィードの定義
 const presetFeeds = {
@@ -106,6 +107,7 @@ function removeNewsFeed(feedId) {
     // そのフィードのニュースアイテムも削除
     newsItems = newsItems.filter(item => item.feedId !== feedId);
     saveNewsItems();
+    failedFeeds.delete(feedId); // 失敗リストからも削除
     renderNews();
 }
 
@@ -121,6 +123,7 @@ function toggleNewsFeed(feedId) {
             // 無効化されたフィードのニュースを非表示
             newsItems = newsItems.filter(item => item.feedId !== feedId);
             saveNewsItems();
+            failedFeeds.delete(feedId); // 失敗リストからも削除
             renderNews();
         }
     }
@@ -131,31 +134,61 @@ async function fetchAllNews() {
     if (isLoading) return;
     
     isLoading = true;
+    failedFeeds.clear(); // 失敗リストをクリア
     renderNews(); // 読み込み状態を表示
     
     try {
         newsItems = [];
-        for (const feed of newsFeeds) {
-            if (feed.enabled) {
-                await fetchNewsFromFeed(feed);
-            }
+        const enabledFeeds = newsFeeds.filter(feed => feed.enabled);
+        
+        if (enabledFeeds.length === 0) {
+            throw new Error('有効なニュースフィードがありません');
         }
+        
+        // 並列でフィードを取得（エラーが発生しても他のフィードは継続）
+        const feedPromises = enabledFeeds.map(feed => 
+            fetchNewsFromFeed(feed).catch(error => {
+                console.error(`Failed to fetch from ${feed.name}:`, error);
+                failedFeeds.add(feed.id);
+                return null;
+            })
+        );
+        
+        await Promise.allSettled(feedPromises);
+        
         saveNewsItems();
         lastUpdate = new Date();
         renderNews();
         
-        // 成功メッセージを表示
-        if (window.showToast) {
-            window.showToast.success('ニュースを更新しました');
+        // 成功/失敗の統計を表示
+        const successCount = enabledFeeds.length - failedFeeds.size;
+        const totalCount = enabledFeeds.length;
+        
+        if (failedFeeds.size === 0) {
+            if (window.showToast) {
+                window.showToast.success(`${totalCount}個のニュースフィードから更新しました`);
+            }
+        } else if (successCount > 0) {
+            if (window.showToast) {
+                window.showToast.warning(`${successCount}/${totalCount}個のフィードから更新しました（${failedFeeds.size}個失敗）`);
+            }
+        } else {
+            if (window.showToast) {
+                window.showToast.error('すべてのニュースフィードでエラーが発生しました');
+            }
         }
         
     } catch (error) {
         console.error('Error fetching all news:', error);
         
-        // エラーメッセージを表示
-        if (window.showToast) {
-            window.showToast.error('ニュースの取得に失敗しました');
+        // エラーハンドラーを使用
+        if (window.errorHandler) {
+            window.errorHandler.handleError('News', error, {
+                retry: false,
+                showToast: true
+            });
         }
+        
     } finally {
         isLoading = false;
         renderNews();
@@ -191,41 +224,45 @@ async function fetchNewsFromFeed(feed) {
         
         newsItems.push(...newItems);
         
+        // 成功したフィードを失敗リストから削除
+        failedFeeds.delete(feed.id);
+        
     } catch (error) {
         console.error(`Error fetching news from ${feed.name}:`, error);
+        
+        // エラーハンドラーを使用
+        if (window.errorHandler) {
+            window.errorHandler.handleError('NewsFeed', error, {
+                retry: false,
+                showToast: false, // 個別フィードのエラーは静かに処理
+                context: feed.name
+            });
+        }
+        
+        failedFeeds.add(feed.id);
         showNewsError(feed.name, error.message);
+        throw error; // 上位で処理するために再スロー
     }
 }
 
 // ニュースエラー表示
 function showNewsError(feedName, errorMessage) {
-    const newsContainer = document.getElementById('news-container');
+    const container = document.getElementById('news-container');
+    if (!container) return;
     
-    // 既存のエラーメッセージを削除
-    const existingErrors = newsContainer.querySelectorAll('.news-error');
-    existingErrors.forEach(error => error.remove());
+    // エラーアイテムを追加
+    const errorItem = {
+        id: `error_${Date.now()}`,
+        title: `${feedName}の取得に失敗しました`,
+        link: '#',
+        pubDate: new Date().toISOString(),
+        feedName: feedName,
+        isError: true,
+        errorMessage: errorMessage
+    };
     
-    const errorDiv = document.createElement('div');
-    errorDiv.className = 'news-error text-center text-red-400 text-sm py-3 bg-red-50 bg-opacity-50 rounded-lg border border-red-200 border-opacity-50 mb-3';
-    errorDiv.innerHTML = `
-        <i class="fas fa-exclamation-triangle mr-1"></i>
-        <span class="font-medium">${feedName}</span>からのニュース取得に失敗しました
-        <br><span class="text-xs text-red-300">${errorMessage}</span>
-        <br><button class="retry-feed-btn text-blue-400 hover:text-blue-300 text-xs mt-2 px-3 py-1 bg-blue-50 rounded-full transition-colors" data-feed="${feedName}">
-            <i class="fas fa-sync-alt mr-1"></i>再試行
-        </button>
-    `;
-    
-    // 再試行ボタンのイベントリスナーを追加
-    errorDiv.querySelector('.retry-feed-btn').addEventListener('click', (e) => {
-        e.preventDefault();
-        const feed = newsFeeds.find(f => f.name === feedName);
-        if (feed) {
-            fetchNewsFromFeed(feed);
-        }
-    });
-    
-    newsContainer.appendChild(errorDiv);
+    // エラーアイテムを先頭に追加
+    newsItems.unshift(errorItem);
 }
 
 // ニュースを表示
@@ -270,11 +307,40 @@ function renderNews() {
         ${lastUpdate ? `
             <div class="text-xs text-gray-400 mb-3 text-center">
                 <i class="fas fa-clock mr-1"></i>最終更新: ${lastUpdate.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })}
+                ${failedFeeds.size > 0 ? `<span class="text-red-400 ml-2">(${failedFeeds.size}個のフィードでエラー)</span>` : ''}
             </div>
         ` : ''}
         <div class="space-y-3">
             ${displayNews.map(item => {
-                // ソース名を抽出（Googleニュースの場合）
+                // エラーアイテムの場合は特別な表示
+                if (item.isError) {
+                    return `
+                        <div class="news-item bg-red-50 bg-opacity-90 rounded-lg p-4 border border-red-200 border-opacity-50">
+                            <div class="flex justify-between items-start mb-3">
+                                <div class="flex items-center">
+                                    <span class="text-xs bg-red-100 text-red-700 px-2 py-1 rounded-full font-medium">
+                                        <i class="fas fa-exclamation-triangle mr-1"></i>エラー
+                                    </span>
+                                    <span class="text-xs text-gray-500 ml-2">${formatDate(item.pubDate)}</span>
+                                </div>
+                            </div>
+                            <div class="text-sm font-semibold text-red-700 mb-2">
+                                ${item.title}
+                            </div>
+                            <div class="text-xs text-red-600">
+                                ${item.errorMessage}
+                            </div>
+                            <div class="mt-2">
+                                <button onclick="retryFailedFeed('${item.feedName}')" 
+                                        class="text-xs bg-red-100 text-red-700 px-3 py-1 rounded-full hover:bg-red-200 transition-colors">
+                                    <i class="fas fa-sync-alt mr-1"></i>再試行
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                // 通常のニュースアイテム
                 const sourceName = extractSourceName(item.title, item.feedName);
                 const cleanTitle = cleanNewsTitle(item.title);
                 const timeAgo = formatDate(item.pubDate || item.isoDate);
@@ -521,6 +587,26 @@ function resetToGoogleNewsOnly() {
     // リセット完了メッセージを表示
     if (window.showToast) {
         window.showToast.info('Googleニュースのみにリセットしました');
+    }
+}
+
+// 失敗したフィードの再試行
+function retryFailedFeed(feedName) {
+    const feed = newsFeeds.find(f => f.name === feedName);
+    if (feed) {
+        // エラーアイテムを削除
+        newsItems = newsItems.filter(item => !(item.isError && item.feedName === feedName));
+        saveNewsItems();
+        
+        // フィードを再試行
+        fetchNewsFromFeed(feed).then(() => {
+            renderNews();
+            if (window.showToast) {
+                window.showToast.success(`${feedName}の再試行が完了しました`);
+            }
+        }).catch(() => {
+            renderNews();
+        });
     }
 }
 
