@@ -273,7 +273,17 @@ export function renderCategories() {
         if (category.bookmarks && category.bookmarks.length > 0) {
             category.bookmarks.forEach(bookmark => {
                 const bookmarkElement = document.createElement('div');
-                bookmarkElement.className = 'bg-white bg-opacity-70 hover:bg-opacity-90 rounded-lg p-3 transition-all duration-200 bookmark-item relative group';
+                bookmarkElement.className = 'bg-white bg-opacity-70 hover:bg-opacity-90 rounded-lg p-3 transition-all duration-200 bookmark-item relative group cursor-pointer';
+                
+                // カード全体のクリックイベントを追加
+                bookmarkElement.addEventListener('click', (e) => {
+                    // 編集・削除ボタンがクリックされた場合はリンクを開かない
+                    if (e.target.closest('.bookmark-actions')) {
+                        return;
+                    }
+                    // 新しいタブでリンクを開く
+                    window.open(bookmark.url, '_blank');
+                });
                 
                 const bookmarkLink = document.createElement('a');
                 bookmarkLink.href = bookmark.url;
@@ -306,6 +316,7 @@ export function renderCategories() {
                 editBookmarkBtn.innerHTML = '<i class="fas fa-edit"></i>';
                 editBookmarkBtn.addEventListener('click', (e) => {
                     e.preventDefault();
+                    e.stopPropagation(); // カード全体のクリックイベントを防ぐ
                     currentCategoryIdForBookmark = category.id;
                     bookmarkNameInput.value = bookmark.name;
                     bookmarkUrlInput.value = bookmark.url;
@@ -361,6 +372,7 @@ export function renderCategories() {
                 deleteBookmarkBtn.innerHTML = '<i class="fas fa-trash"></i>';
                 deleteBookmarkBtn.addEventListener('click', (e) => {
                     e.preventDefault();
+                    e.stopPropagation(); // カード全体のクリックイベントを防ぐ
                     if (confirm(`Delete bookmark "${bookmark.name}"?`)) {
                         category.bookmarks = category.bookmarks.filter(b => b.id !== bookmark.id);
                         saveCategories();
