@@ -1,7 +1,6 @@
 // ToDoリスト管理
 const todoList = document.getElementById('todo-list');
 const newTodoInput = document.getElementById('new-todo-input');
-const addTodoBtn = document.getElementById('add-todo-btn');
 const addTodoSubmit = document.getElementById('add-todo-submit');
 
 let todos = JSON.parse(localStorage.getItem('todos')) || [];
@@ -59,10 +58,6 @@ export function renderTodos() {
 }
 
 export function setupTodoEvents() {
-    addTodoBtn.addEventListener('click', () => {
-        newTodoInput.focus();
-    });
-    
     addTodoSubmit.addEventListener('click', () => {
         addNewTodo();
     });

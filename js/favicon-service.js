@@ -71,17 +71,8 @@ class FaviconService {
                     return url;
                 }
             } catch (error) {
-                console.debug(`Favicon service ${i + 1} failed for ${domain}:`, error);
-                
-                // エラーハンドラーを使用
-                if (window.errorHandler) {
-                    window.errorHandler.handleError('FaviconService', error, {
-                        retry: false,
-                        showToast: false,
-                        context: `Service ${i + 1} for ${domain}`
-                    });
-                }
-                
+                // CSPエラーやネットワークエラーは静かに無視
+                console.debug(`Favicon service ${i + 1} failed for ${domain}:`, error.message);
                 continue;
             }
         }
@@ -92,15 +83,18 @@ class FaviconService {
     // Faviconの有効性を検証
     async validateFavicon(url) {
         try {
+            // CSPエラーを回避するため、より安全な検証方法を使用
             const response = await fetch(url, {
                 method: 'HEAD',
-                mode: 'no-cors'
+                mode: 'no-cors',
+                cache: 'no-cache'
             });
             
             // no-corsモードでは常に成功するため、実際の検証は画像読み込みで行う
             return true;
         } catch (error) {
-            console.debug('Favicon validation failed for:', url, error);
+            // CSPエラーやネットワークエラーは静かに無視
+            console.debug('Favicon validation failed for:', url, error.message);
             return false;
         }
     }
