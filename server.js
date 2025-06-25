@@ -1,3 +1,6 @@
+// 環境変数の読み込み
+require('dotenv').config();
+
 const express = require('express');
 const path = require('path');
 const cors = require('cors');
@@ -5,15 +8,46 @@ const Parser = require('rss-parser');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// OpenWeatherMap API設定
-const OPENWEATHER_API_KEY = '360fc68bd06d2509898efd471f4698fc'; // 新しいAPIキーを設定してください
+// API設定（環境変数から読み込み）
+const OPENWEATHER_API_KEY = process.env.OPENWEATHER_API_KEY;
+const UNSPLASH_ACCESS_KEY = process.env.UNSPLASH_ACCESS_KEY;
 const DEFAULT_CITY = 'Tokyo,JP';
 
-// CORSを有効化
-app.use(cors());
+// APIキーの検証
+if (!OPENWEATHER_API_KEY) {
+    console.error('警告: OPENWEATHER_API_KEYが設定されていません。天気機能が動作しません。');
+}
+
+if (!UNSPLASH_ACCESS_KEY) {
+    console.error('警告: UNSPLASH_ACCESS_KEYが設定されていません。背景画像機能が動作しません。');
+}
+
+// セキュリティヘッダーの設定
+app.use((req, res, next) => {
+    // XSS保護
+    res.setHeader('X-XSS-Protection', '1; mode=block');
+    // コンテンツタイプスニッフィング保護
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    // クリックジャッキング保護
+    res.setHeader('X-Frame-Options', 'DENY');
+    // 厳格なトランスポートセキュリティ（HTTPS使用時）
+    if (process.env.NODE_ENV === 'production') {
+        res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+    }
+    next();
+});
+
+// CORS設定の改善
+const corsOptions = {
+    origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
+    credentials: true,
+    optionsSuccessStatus: 200
+};
+app.use(cors(corsOptions));
 
 // JSONボディパーサーを有効化
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // 静的ファイルを配信
 app.use(express.static(__dirname));
@@ -156,6 +190,59 @@ app.get('/api/news', async (req, res) => {
             error: 'Failed to fetch RSS feed',
             details: error.message,
             url: url
+        });
+    }
+});
+
+// 背景画像取得API（Unsplash）
+app.get('/api/background', async (req, res) => {
+    if (!UNSPLASH_ACCESS_KEY) {
+        return res.status(500).json({ 
+            error: 'Unsplash API key not configured',
+            fallback: 'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?ixlib=rb-1.2.1&auto=format&fit=crop&w=1920&q=80'
+        });
+    }
+    
+    const { query = 'nature,landscape,scenic,peaceful' } = req.query;
+    
+    try {
+        const url = `https://api.unsplash.com/photos/random?query=${encodeURIComponent(query)}&client_id=${UNSPLASH_ACCESS_KEY}`;
+        
+        console.log(`Fetching background image from Unsplash with query: ${query}`);
+        
+        const response = await fetch(url);
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error(`Unsplash API error ${response.status}:`, errorText);
+            
+            if (response.status === 401) {
+                throw new Error(`API認証エラー (401): Unsplash APIキーが無効です。`);
+            } else if (response.status === 429) {
+                throw new Error(`API制限エラー (429): リクエスト制限に達しました。`);
+            } else {
+                throw new Error(`Unsplash API error: ${response.status} - ${errorText}`);
+            }
+        }
+        
+        const data = await response.json();
+        
+        if (data.urls && data.urls.full) {
+            res.json({
+                imageUrl: data.urls.full,
+                photographer: data.user?.name || 'Unknown',
+                photographerUrl: data.user?.links?.html || '',
+                description: data.description || data.alt_description || ''
+            });
+        } else {
+            throw new Error('Invalid response from Unsplash API');
+        }
+        
+    } catch (error) {
+        console.error('Error fetching background image:', error);
+        res.status(500).json({ 
+            error: 'Failed to fetch background image',
+            details: error.message,
+            fallback: 'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?ixlib=rb-1.2.1&auto=format&fit=crop&w=1920&q=80'
         });
     }
 });

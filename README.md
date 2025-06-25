@@ -20,20 +20,32 @@
 npm install
 ```
 
-### 2. APIキーの設定
+### 2. 環境変数の設定
 
-#### OpenWeatherMap API（天気予報機能）
-1. [OpenWeatherMap](https://openweathermap.org/api) でアカウントを作成
-2. APIキーを取得
-3. `server.js` の `OPENWEATHER_API_KEY` を実際のAPIキーに置き換え
-
-```javascript
-const OPENWEATHER_API_KEY = 'your_actual_api_key_here';
+#### 環境変数ファイルの作成
+```bash
+cp env.example .env
 ```
 
-#### Unsplash API（背景画像）
-- 現在は無料のAPIキーを使用しています
-- 必要に応じて独自のAPIキーに変更可能
+#### APIキーの設定
+
+**OpenWeatherMap API（天気予報機能）**
+1. [OpenWeatherMap](https://openweathermap.org/api) でアカウントを作成
+2. APIキーを取得
+3. `.env` ファイルの `OPENWEATHER_API_KEY` を実際のAPIキーに置き換え
+
+**Unsplash API（背景画像）**
+1. [Unsplash Developers](https://unsplash.com/developers) でアカウントを作成
+2. アプリケーションを作成してAccess Keyを取得
+3. `.env` ファイルの `UNSPLASH_ACCESS_KEY` を実際のAPIキーに置き換え
+
+```bash
+# .env ファイルの例
+OPENWEATHER_API_KEY=your_actual_openweather_api_key_here
+UNSPLASH_ACCESS_KEY=your_actual_unsplash_access_key_here
+PORT=3000
+NODE_ENV=development
+```
 
 ### 3. サーバーの起動
 ```bash
@@ -44,6 +56,13 @@ npm start
 ```bash
 pm2 start ecosystem.config.js
 ```
+
+## セキュリティ機能
+
+- 🔒 **環境変数によるAPIキー管理** - APIキーをソースコードから分離
+- 🛡️ **セキュリティヘッダー** - XSS、クリックジャッキング、コンテンツスニッフィング保護
+- 🔐 **CORS設定** - 適切なオリジン制限
+- 🚫 **APIキーのクライアントサイド露出防止** - すべてのAPI呼び出しをサーバーサイドで処理
 
 ## 使用方法
 
@@ -68,6 +87,7 @@ pm2 start ecosystem.config.js
 - **バックエンド**: Node.js, Express
 - **外部API**: OpenWeatherMap, Unsplash, RSSフィード
 - **データ保存**: ブラウザ ローカルストレージ
+- **セキュリティ**: dotenv, セキュリティヘッダー, CORS
 
 ## カスタマイズ
 
@@ -82,6 +102,18 @@ const DEFAULT_CITY = 'Osaka,JP'; // 大阪に変更
 ```javascript
 setInterval(getLocationAndWeather, 30 * 60 * 1000); // 30分間隔
 ```
+
+## トラブルシューティング
+
+### APIキーエラー
+- `.env` ファイルが正しく作成されているか確認
+- APIキーが有効で、適切な権限が設定されているか確認
+- サーバーを再起動して環境変数を読み込み直す
+
+### 背景画像が表示されない
+- Unsplash APIキーが正しく設定されているか確認
+- ネットワーク接続を確認
+- ブラウザのコンソールでエラーメッセージを確認
 
 ## ライセンス
 

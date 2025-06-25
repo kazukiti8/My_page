@@ -1,23 +1,39 @@
-// 背景画像の管理（Unsplash API）
-const UNSPLASH_ACCESS_KEY = '77MSHHGMubOavwsIjvZ2lO9AKWUo9e_kapEg1pSQPyI';
+// 背景画像の管理（サーバーサイドAPI経由）
 const backgroundElement = document.getElementById('background');
 
 export function loadBackgroundImage() {
     const query = 'nature,landscape,scenic,peaceful';
-    const url = `https://api.unsplash.com/photos/random?query=${query}&client_id=${UNSPLASH_ACCESS_KEY}`;
+    const url = `/api/background?query=${encodeURIComponent(query)}`;
+    
     fetch(url)
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
         .then(data => {
-            if (data.urls && data.urls.full) {
-                backgroundElement.style.backgroundImage = `url(${data.urls.full})`;
+            if (data.imageUrl) {
+                backgroundElement.style.backgroundImage = `url(${data.imageUrl})`;
                 backgroundElement.style.opacity = '1';
                 
                 // 背景画像の明度を自動調整
-                adjustBackgroundBrightness(data.urls.full);
+                adjustBackgroundBrightness(data.imageUrl);
+                
+                // 写真家情報を保存（将来的な機能拡張用）
+                if (data.photographer) {
+                    localStorage.setItem('lastBackgroundPhotographer', data.photographer);
+                }
+            } else if (data.fallback) {
+                // フォールバック画像を使用
+                backgroundElement.style.backgroundImage = `url(${data.fallback})`;
+                backgroundElement.style.opacity = '1';
+                console.warn('Using fallback background image');
             }
         })
         .catch(error => {
             console.error('Error loading background image:', error);
+            // デフォルトのフォールバック画像
             backgroundElement.style.backgroundImage = 'url(https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?ixlib=rb-1.2.1&auto=format&fit=crop&w=1920&q=80)';
             backgroundElement.style.opacity = '1';
         });
