@@ -1,0 +1,18 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* カスタムスタイル */
+@layer components {
+  .blur-bg {
+    @apply backdrop-blur-md bg-white/30 border border-white/30 shadow-lg;
+  }
+  
+  .search-box {
+    @apply backdrop-blur-xl bg-white/95 border-2 border-white/40 shadow-xl transition-all duration-300;
+  }
+  
+  .search-box:focus {
+    @apply bg-white shadow-2xl border-blue-500/50 outline-none transform -translate-y-0.5;
+  }
+} 
