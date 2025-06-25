@@ -11,6 +11,8 @@ const PORT = process.env.PORT || 3000;
 // API設定（環境変数から読み込み）
 const OPENWEATHER_API_KEY = process.env.OPENWEATHER_API_KEY;
 const UNSPLASH_ACCESS_KEY = process.env.UNSPLASH_ACCESS_KEY;
+// デフォルト都市を変更する場合はここを編集
+// 例: 'Osaka,JP', 'Kyoto,JP', 'Yokohama,JP', 'Nagoya,JP' など
 const DEFAULT_CITY = 'Tokyo,JP';
 
 // APIキーの検証

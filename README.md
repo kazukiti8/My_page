@@ -1,156 +1,231 @@
-# My Serene Start Page
+# My Serene Start Page 🌟
 
-自分だけのオリジナルスタートページです。美しい背景画像、時計、天気予報、ニュースフィード、ブックマーク管理、ToDoリスト、メモ帳機能を備えています。
+美しく機能的なスタートページ - 天気、ブックマーク、ToDoリスト、ニュースフィード、システム情報監視機能付き
 
-## 機能
+## ✨ 機能
 
-- 🌅 **背景画像表示** - Unsplash APIを使用した美しい自然画像
-- ⏰ **時計・日付表示** - リアルタイムの時刻と日付
-- 🌤️ **天気予報** - OpenWeatherMap APIを使用した現在の天気
-- 📰 **ニュースフィード** - 複数のRSSフィードから最新ニュース
-- 🔖 **ブックマーク管理** - カテゴリ別のブックマーク管理
-- ✅ **ToDoリスト** - タスク管理機能
-- 📝 **メモ帳** - 簡単なメモ機能
-- 🔍 **検索機能** - Google検索連携
+- 🌤️ **リアルタイム天気情報** - OpenWeatherMap APIを使用
+- 📚 **ブックマーク管理** - カテゴリー別整理
+- ✅ **ToDoリスト** - タスク管理
+- 📝 **クイックノート** - メモ機能
+- 📰 **ニュースフィード** - RSS/Atom対応
+- 📅 **Googleカレンダー** - スケジュール表示
+- 🗺️ **Googleマップ** - 位置情報
+- 💻 **システム情報** - CPU、メモリ、ディスク使用率
+- 🎨 **テーマカスタマイズ** - ダーク/ライトモード
+- 📱 **PWA対応** - オフライン動作
+- 🔒 **セキュリティ** - CSP、HTTPS対応
 
-## セットアップ
+## 🚀 クイックスタート
 
-### 1. 依存関係のインストール
+### 開発環境
+
 ```bash
+# 依存関係をインストール
 npm install
+
+# 開発サーバーを起動
+npm run dev
+
+# ブラウザで http://localhost:3000 を開く
 ```
 
-### 2. 環境変数の設定
-
-#### 環境変数ファイルの作成
-```bash
-cp env.example .env
-```
-
-#### APIキーの設定
-
-**OpenWeatherMap API（天気予報機能）**
-1. [OpenWeatherMap](https://openweathermap.org/api) でアカウントを作成
-2. APIキーを取得
-3. `.env` ファイルの `OPENWEATHER_API_KEY` を実際のAPIキーに置き換え
-
-**Unsplash API（背景画像）**
-1. [Unsplash Developers](https://unsplash.com/developers) でアカウントを作成
-2. アプリケーションを作成してAccess Keyを取得
-3. `.env` ファイルの `UNSPLASH_ACCESS_KEY` を実際のAPIキーに置き換え
+### 本番環境
 
 ```bash
-# .env ファイルの例
-OPENWEATHER_API_KEY=your_actual_openweather_api_key_here
-UNSPLASH_ACCESS_KEY=your_actual_unsplash_access_key_here
-PORT=3000
-NODE_ENV=development
-```
+# 本番用ビルド
+npm run build
 
-### 3. サーバーの起動
-```bash
+# 本番サーバーを起動
 npm start
 ```
 
-または、PM2を使用：
-```bash
-pm2 start ecosystem.config.js
+## 📦 インストール
+
+1. **リポジトリをクローン**
+   ```bash
+   git clone https://github.com/yourusername/my-serene-start-page.git
+   cd my-serene-start-page
+   ```
+
+2. **依存関係をインストール**
+   ```bash
+   npm install
+   ```
+
+3. **環境変数を設定**
+   ```bash
+   cp env.example .env
+   # .envファイルを編集してAPIキーを設定
+   ```
+
+4. **サーバーを起動**
+   ```bash
+   npm start
+   ```
+
+## 🔧 設定
+
+### 環境変数
+
+`.env`ファイルで以下の設定が可能です：
+
+```env
+# OpenWeatherMap API Key
+OPENWEATHER_API_KEY=your_api_key_here
+
+# Server Port
+PORT=3000
+
+# Environment
+NODE_ENV=production
 ```
 
-## セキュリティ機能
+### APIキーの取得
 
-- 🔒 **環境変数によるAPIキー管理** - APIキーをソースコードから分離
-- 🛡️ **セキュリティヘッダー** - XSS、クリックジャッキング、コンテンツスニッフィング保護
-- 🔐 **CORS設定** - 適切なオリジン制限
-- 🚫 **APIキーのクライアントサイド露出防止** - すべてのAPI呼び出しをサーバーサイドで処理
+1. **OpenWeatherMap API**
+   - [OpenWeatherMap](https://openweathermap.org/api)に登録
+   - 無料プランでAPIキーを取得
+   - `.env`ファイルに設定
 
-## エラーハンドリング機能
+## 🎨 カスタマイズ
 
-- 🚨 **包括的なエラーハンドリング** - グローバルエラー、Promiseエラー、ネットワークエラーの自動検出
-- 🔄 **自動リトライ機能** - 一時的なエラーに対する自動復旧（最大3回）
-- 📊 **エラー分類システム** - HTTPエラー、ネットワークエラー、APIエラー、タイムアウトエラーの適切な分類
-- 📝 **エラーログ機能** - ローカルストレージにエラーログを保存（最新10件）
-- 🔔 **ユーザー通知** - エラーの重要度に応じたトースト通知とモーダル表示
-- 🛠️ **並列処理エラーハンドリング** - ニュースフィードの並列取得時の個別エラー処理
-- 📈 **エラー統計** - セッション中のエラー発生回数の追跡
+### テーマ
 
-## 使用方法
+- ダーク/ライトモードの切り替え
+- カラーテーマの変更
+- 背景画像の設定
 
-### 天気予報
-- 位置情報の許可を求められた場合は許可してください
-- 位置情報が利用できない場合は、デフォルトで東京の天気を表示
+### ウィジェット
 
-### ニュースフィード
-- 右カラムの「+」ボタンでフィードを追加
-- プリセットフィードから選択可能
-- 手動でRSSフィードURLを入力可能
+- ブックマークの追加/編集
+- ニュースフィードの設定
+- ToDoリストの管理
 
-### ブックマーク
-- 中央カラムでカテゴリとブックマークを管理
-- ホバー時に編集・削除ボタンが表示
+## 📱 PWA機能
 
-## 技術スタック
+- オフライン対応
+- ホーム画面への追加
+- プッシュ通知（将来実装予定）
+
+## 🔒 セキュリティ
+
+- Content Security Policy (CSP)
+- HTTPS対応
+- XSS対策
+- CSRF対策
+
+## 🚀 デプロイ
+
+### Heroku
+
+```bash
+# Heroku CLIをインストール
+heroku create your-app-name
+git push heroku main
+```
+
+### Vercel
+
+```bash
+# Vercel CLIをインストール
+npm i -g vercel
+vercel --prod
+```
+
+### Netlify
+
+```bash
+# Netlify CLIをインストール
+npm i -g netlify-cli
+netlify deploy --prod
+```
+
+### Docker
+
+```dockerfile
+FROM node:18-alpine
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci --only=production
+COPY . .
+EXPOSE 3000
+CMD ["npm", "start"]
+```
+
+## 📁 プロジェクト構造
+
+```
+my-serene-start-page/
+├── css/                 # スタイルシート
+│   ├── main.css        # メインCSS
+│   ├── theme.css       # テーマCSS
+│   └── input.css       # Tailwind入力
+├── js/                  # JavaScript
+│   ├── app.js          # メインアプリ
+│   ├── weather.js      # 天気機能
+│   ├── bookmarks.js    # ブックマーク
+│   ├── todo.js         # ToDo機能
+│   ├── news.js         # ニュース機能
+│   ├── system-info.js  # システム情報
+│   └── ...             # その他のモジュール
+├── server.js           # Expressサーバー
+├── index.html          # 開発用HTML
+├── index.prod.html     # 本番用HTML
+├── sw.js              # Service Worker
+├── package.json       # 依存関係
+└── README.md          # このファイル
+```
+
+## 🛠️ 開発
+
+### 利用技術
 
 - **フロントエンド**: HTML5, CSS3, JavaScript (ES6+)
-- **CSSフレームワーク**: Tailwind CSS
-- **アイコン**: Font Awesome
 - **バックエンド**: Node.js, Express
-- **外部API**: OpenWeatherMap, Unsplash, RSSフィード
-- **データ保存**: ブラウザ ローカルストレージ
-- **セキュリティ**: dotenv, セキュリティヘッダー, CORS
+- **スタイリング**: Tailwind CSS
+- **アイコン**: Font Awesome
+- **API**: OpenWeatherMap, Google Calendar, Google Maps
 
-## カスタマイズ
+### 開発コマンド
 
-### デフォルト都市の変更
-`server.js` の `DEFAULT_CITY` を変更：
-```javascript
-const DEFAULT_CITY = 'Osaka,JP'; // 大阪に変更
-```
-
-### 天気更新間隔の変更
-`js/weather.js` の更新間隔を変更：
-```javascript
-setInterval(getLocationAndWeather, 30 * 60 * 1000); // 30分間隔
-```
-
-## トラブルシューティング
-
-### APIキーエラー
-- `.env` ファイルが正しく作成されているか確認
-- APIキーが有効で、適切な権限が設定されているか確認
-- サーバーを再起動して環境変数を読み込み直す
-
-### 背景画像が表示されない
-- Unsplash APIキーが正しく設定されているか確認
-- ネットワーク接続を確認
-- ブラウザのコンソールでエラーメッセージを確認
-
-### エラーハンドリングの確認
-- ブラウザのコンソールでエラーログを確認
-- ローカルストレージの `errorLogs` を確認
-- ネットワークタブでAPI呼び出しの状況を確認
-
-### エラーハンドリングテスト
 ```bash
-# エラーハンドリング機能のテスト
-npm run test-error-handling
+# 開発サーバー
+npm run dev
 
-# セキュリティ設定の確認
+# 本番ビルド
+npm run build
+
+# 静的ファイルサーバー
+npm run serve
+
+# セキュリティチェック
 npm run security-check
 ```
 
-### エラーログの確認方法
-1. ブラウザの開発者ツールを開く（F12）
-2. コンソールタブでエラーメッセージを確認
-3. アプリケーションタブ > ローカルストレージで `errorLogs` を確認
-4. エラーの詳細情報と統計を確認
+## 🤝 コントリビューション
 
-### よくあるエラーと対処法
-- **401 Unauthorized**: APIキーが無効または期限切れ
-- **429 Too Many Requests**: API制限に達した（しばらく待ってから再試行）
-- **Network Error**: インターネット接続を確認
-- **Timeout Error**: サーバーの応答が遅い（自動リトライされます）
+1. フォークを作成
+2. フィーチャーブランチを作成 (`git checkout -b feature/amazing-feature`)
+3. 変更をコミット (`git commit -m 'Add amazing feature'`)
+4. ブランチにプッシュ (`git push origin feature/amazing-feature`)
+5. プルリクエストを作成
 
-## ライセンス
+## 📄 ライセンス
 
-ISC License 
+このプロジェクトはMITライセンスの下で公開されています。詳細は[LICENSE](LICENSE)ファイルを参照してください。
+
+## 🙏 謝辞
+
+- [OpenWeatherMap](https://openweathermap.org/) - 天気API
+- [Tailwind CSS](https://tailwindcss.com/) - CSSフレームワーク
+- [Font Awesome](https://fontawesome.com/) - アイコン
+- [Google APIs](https://developers.google.com/) - カレンダー・マップAPI
+
+## 📞 サポート
+
+問題や質問がある場合は、[Issues](https://github.com/yourusername/my-serene-start-page/issues)で報告してください。
+
+---
+
+⭐ このプロジェクトが役に立ったら、スターを付けてください！ 
