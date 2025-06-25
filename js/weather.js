@@ -1,5 +1,8 @@
 // 天気データの管理
 let weatherData = null;
+let forecastData = null;
+let isLoading = false;
+let lastUpdate = null;
 
 // 天気アイコンのマッピング（OpenWeatherMap API用）
 const weatherIcons = {
@@ -25,18 +28,37 @@ const weatherIcons = {
 
 // 天気データを取得
 async function fetchWeatherData() {
+    if (isLoading) return;
+    
+    isLoading = true;
+    showLoadingWeather();
+    
     try {
         const response = await fetch('/api/weather');
         if (!response.ok) {
-            console.warn('Weather API not available, showing default weather display');
-            showDefaultWeather();
-            return;
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.details || `HTTP ${response.status}: ${response.statusText}`);
         }
+        
         weatherData = await response.json();
+        lastUpdate = new Date();
         updateWeatherDisplay();
+        
+        // 成功メッセージを表示
+        if (window.showToast) {
+            window.showToast.success('天気情報を更新しました');
+        }
+        
     } catch (error) {
-        console.warn('Error fetching weather data:', error);
-        showDefaultWeather();
+        console.error('Error fetching weather data:', error);
+        showWeatherError(error.message);
+        
+        // エラーメッセージを表示
+        if (window.showToast) {
+            window.showToast.error('天気情報の取得に失敗しました');
+        }
+    } finally {
+        isLoading = false;
     }
 }
 
@@ -48,82 +70,99 @@ function updateWeatherDisplay() {
     if (!weatherContainer) return;
 
     const iconClass = weatherIcons[weatherData.icon] || 'fas fa-cloud';
+    const updateTime = lastUpdate ? lastUpdate.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' }) : '';
     
     weatherContainer.innerHTML = `
-        <div class="flex items-center mb-2 cursor-pointer hover:bg-white hover:bg-opacity-10 rounded-lg p-2 transition-colors" onclick="window.open('https://weather.yahoo.co.jp/weather/jp/13/4410.html', '_blank')">
-            <i class="${iconClass} text-3xl mr-3"></i>
-            <div>
-                <div class="text-xl font-semibold">${weatherData.description}</div>
-                <div class="text-sm">${weatherData.location}, ${weatherData.country}</div>
+        <div class="flex items-center justify-between mb-3">
+            <div class="flex items-center cursor-pointer hover:bg-white hover:bg-opacity-10 rounded-lg p-2 transition-colors" onclick="window.open('https://weather.yahoo.co.jp/weather/jp/13/4410.html', '_blank')">
+                <i class="${iconClass} text-3xl mr-3 text-yellow-400"></i>
+                <div>
+                    <div class="text-xl font-semibold">${weatherData.description}</div>
+                    <div class="text-sm text-gray-300">${weatherData.location}, ${weatherData.country}</div>
+                </div>
+                <i class="fas fa-external-link-alt ml-2 text-sm opacity-60"></i>
             </div>
-            <i class="fas fa-external-link-alt ml-auto text-sm opacity-60"></i>
+            <button onclick="refreshWeather()" class="text-blue-400 hover:text-blue-300 transition-colors" title="天気を更新">
+                <i class="fas fa-sync-alt ${isLoading ? 'animate-spin' : ''}"></i>
+            </button>
         </div>
-        <div class="text-2xl font-bold">${weatherData.temperature}°C</div>
-        <div class="text-sm mt-1">H: ${weatherData.temp_max}° L: ${weatherData.temp_min}°</div>
-        <div class="text-xs mt-1 text-gray-300">湿度: ${weatherData.humidity}% | 風速: ${weatherData.wind_speed}m/s</div>
-        <div id="weather-forecast" class="mt-4 border-t border-white border-opacity-10 pt-2"></div>
+        <div class="text-3xl font-bold mb-2">${weatherData.temperature}°C</div>
+        <div class="text-sm mb-2">
+            <span class="text-red-400">H: ${weatherData.temp_max}°</span> | 
+            <span class="text-blue-400">L: ${weatherData.temp_min}°</span>
+        </div>
+        <div class="text-xs text-gray-300 mb-3">
+            <i class="fas fa-tint mr-1"></i>湿度: ${weatherData.humidity}% | 
+            <i class="fas fa-wind mr-1"></i>風速: ${weatherData.wind_speed}m/s
+        </div>
+        ${updateTime ? `<div class="text-xs text-gray-400 mb-3">最終更新: ${updateTime}</div>` : ''}
+        <div id="weather-forecast" class="mt-4 border-t border-white border-opacity-10 pt-3"></div>
     `;
+    
+    // 5日間予報を表示
+    if (forecastData) {
+        renderForecast(forecastData);
+    }
 }
 
-// デフォルトの天気表示
-function showDefaultWeather() {
+// 読み込み中の天気表示
+function showLoadingWeather() {
     const weatherContainer = document.querySelector('.left-column .blur-bg:last-child');
     if (!weatherContainer) return;
 
     weatherContainer.innerHTML = `
-        <div class="flex items-center mb-2 cursor-pointer hover:bg-white hover:bg-opacity-10 rounded-lg p-2 transition-colors" onclick="window.open('https://weather.yahoo.co.jp/weather/jp/13/4410.html', '_blank')">
-            <i class="fas fa-cloud-sun text-3xl mr-3"></i>
-            <div>
-                <div class="text-xl font-semibold">天気情報</div>
-                <div class="text-sm">APIキーを設定してください</div>
+        <div class="flex items-center justify-between mb-3">
+            <div class="flex items-center">
+                <i class="fas fa-cloud-sun text-3xl mr-3 text-yellow-400"></i>
+                <div>
+                    <div class="text-xl font-semibold">天気を取得中...</div>
+                    <div class="text-sm text-gray-300">位置情報を確認中</div>
+                </div>
             </div>
-            <i class="fas fa-external-link-alt ml-auto text-sm opacity-60"></i>
+            <i class="fas fa-sync-alt animate-spin text-blue-400"></i>
         </div>
-        <div class="text-2xl font-bold">--°C</div>
-        <div class="text-sm mt-1">H: --° L: --°</div>
-        <div class="text-xs mt-1 text-gray-300">湿度: --% | 風速: --m/s</div>
-        <div class="text-xs mt-2 text-yellow-400">
-            <i class="fas fa-exclamation-triangle mr-1"></i>
-            OpenWeatherMap APIキーを設定してください
+        <div class="text-3xl font-bold mb-2">--°C</div>
+        <div class="text-sm mb-2">H: --° | L: --°</div>
+        <div class="text-xs text-gray-300">湿度: --% | 風速: --m/s</div>
+        <div id="weather-forecast" class="mt-4 border-t border-white border-opacity-10 pt-3">
+            <div class="text-center py-4">
+                <i class="fas fa-spinner animate-spin text-2xl text-blue-400 mb-2"></i>
+                <div class="text-sm text-gray-300">予報データを取得中...</div>
+            </div>
         </div>
-        <div id="weather-forecast" class="mt-4 border-t border-white border-opacity-10 pt-2">
-            <div class="text-xs font-semibold mb-2">5日間予報</div>
-            <div class="flex justify-between space-x-2">
-                <div class="flex flex-col items-center flex-1 bg-white bg-opacity-10 rounded-lg p-2">
-                    <div class="text-xs font-medium">--</div>
-                    <div class="text-xs text-gray-300">--/--</div>
-                    <i class="fas fa-cloud text-lg my-1"></i>
-                    <div class="text-xs font-semibold">--°</div>
-                    <div class="text-xs text-gray-300">--°/--°</div>
+    `;
+}
+
+// エラー時の天気表示
+function showWeatherError(errorMessage) {
+    const weatherContainer = document.querySelector('.left-column .blur-bg:last-child');
+    if (!weatherContainer) return;
+
+    weatherContainer.innerHTML = `
+        <div class="flex items-center justify-between mb-3">
+            <div class="flex items-center cursor-pointer hover:bg-white hover:bg-opacity-10 rounded-lg p-2 transition-colors" onclick="window.open('https://weather.yahoo.co.jp/weather/jp/13/4410.html', '_blank')">
+                <i class="fas fa-cloud-sun text-3xl mr-3 text-yellow-400"></i>
+                <div>
+                    <div class="text-xl font-semibold">天気情報</div>
+                    <div class="text-sm text-gray-300">エラーが発生しました</div>
                 </div>
-                <div class="flex flex-col items-center flex-1 bg-white bg-opacity-10 rounded-lg p-2">
-                    <div class="text-xs font-medium">--</div>
-                    <div class="text-xs text-gray-300">--/--</div>
-                    <i class="fas fa-cloud text-lg my-1"></i>
-                    <div class="text-xs font-semibold">--°</div>
-                    <div class="text-xs text-gray-300">--°/--°</div>
-                </div>
-                <div class="flex flex-col items-center flex-1 bg-white bg-opacity-10 rounded-lg p-2">
-                    <div class="text-xs font-medium">--</div>
-                    <div class="text-xs text-gray-300">--/--</div>
-                    <i class="fas fa-cloud text-lg my-1"></i>
-                    <div class="text-xs font-semibold">--°</div>
-                    <div class="text-xs text-gray-300">--°/--°</div>
-                </div>
-                <div class="flex flex-col items-center flex-1 bg-white bg-opacity-10 rounded-lg p-2">
-                    <div class="text-xs font-medium">--</div>
-                    <div class="text-xs text-gray-300">--/--</div>
-                    <i class="fas fa-cloud text-lg my-1"></i>
-                    <div class="text-xs font-semibold">--°</div>
-                    <div class="text-xs text-gray-300">--°/--°</div>
-                </div>
-                <div class="flex flex-col items-center flex-1 bg-white bg-opacity-10 rounded-lg p-2">
-                    <div class="text-xs font-medium">--</div>
-                    <div class="text-xs text-gray-300">--/--</div>
-                    <i class="fas fa-cloud text-lg my-1"></i>
-                    <div class="text-xs font-semibold">--°</div>
-                    <div class="text-xs text-gray-300">--°/--°</div>
-                </div>
+                <i class="fas fa-external-link-alt ml-2 text-sm opacity-60"></i>
+            </div>
+            <button onclick="refreshWeather()" class="text-blue-400 hover:text-blue-300 transition-colors" title="再試行">
+                <i class="fas fa-redo"></i>
+            </button>
+        </div>
+        <div class="text-3xl font-bold mb-2">--°C</div>
+        <div class="text-sm mb-2">H: --° | L: --°</div>
+        <div class="text-xs text-gray-300">湿度: --% | 風速: --m/s</div>
+        <div class="text-xs mt-3 p-2 bg-red-50 bg-opacity-50 rounded-lg border border-red-200 border-opacity-50">
+            <i class="fas fa-exclamation-triangle text-red-400 mr-1"></i>
+            <span class="text-red-300">${errorMessage}</span>
+        </div>
+        <div id="weather-forecast" class="mt-4 border-t border-white border-opacity-10 pt-3">
+            <div class="text-center py-4">
+                <i class="fas fa-exclamation-circle text-2xl text-red-400 mb-2"></i>
+                <div class="text-sm text-gray-300">予報データを取得できませんでした</div>
             </div>
         </div>
     `;
@@ -138,14 +177,15 @@ async function fetchForecast(lat, lon) {
         }
         const response = await fetch(url);
         if (!response.ok) {
-            console.warn('Forecast API not available, skipping forecast display');
-            return;
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.details || `HTTP ${response.status}: ${response.statusText}`);
         }
         const forecast = await response.json();
+        forecastData = forecast;
         renderForecast(forecast);
-    } catch (e) {
-        console.warn('Error fetching forecast:', e);
-        // エラーが発生してもアプリケーションを停止させない
+    } catch (error) {
+        console.error('Error fetching forecast:', error);
+        showForecastError(error.message);
     }
 }
 
@@ -153,28 +193,53 @@ async function fetchForecast(lat, lon) {
 function renderForecast(forecast) {
     const container = document.getElementById('weather-forecast');
     if (!container) return;
+    
     if (!forecast || forecast.length === 0) {
-        container.innerHTML = '<div class="text-xs text-gray-300">予報データなし</div>';
+        container.innerHTML = `
+            <div class="text-xs font-semibold mb-2">5日間予報</div>
+            <div class="text-center py-4">
+                <i class="fas fa-exclamation-circle text-2xl text-yellow-400 mb-2"></i>
+                <div class="text-sm text-gray-300">予報データがありません</div>
+            </div>
+        `;
         return;
     }
+    
     container.innerHTML = `
         <div class="text-xs font-semibold mb-2">5日間予報</div>
-        <div class="flex justify-between space-x-2">
+        <div class="grid grid-cols-5 gap-2">
             ${forecast.map(day => {
                 const iconClass = weatherIcons[day.icon] || 'fas fa-cloud';
                 const date = new Date(day.date);
                 const dayLabel = date.toLocaleDateString('ja-JP', { weekday: 'short' });
                 const dateLabel = date.toLocaleDateString('ja-JP', { month: 'numeric', day: 'numeric' });
                 return `
-                    <div class="flex flex-col items-center flex-1 bg-white bg-opacity-10 rounded-lg p-2">
+                    <div class="flex flex-col items-center bg-white bg-opacity-10 rounded-lg p-2 hover:bg-opacity-20 transition-colors">
                         <div class="text-xs font-medium">${dayLabel}</div>
                         <div class="text-xs text-gray-300">${dateLabel}</div>
-                        <i class="${iconClass} text-lg my-1"></i>
+                        <i class="${iconClass} text-lg my-1 text-yellow-400"></i>
                         <div class="text-xs font-semibold">${day.temp}°</div>
-                        <div class="text-xs text-gray-300">${day.temp_min}°/${day.temp_max}°</div>
+                        <div class="text-xs text-gray-300">
+                            <span class="text-red-400">${day.temp_max}°</span>/<span class="text-blue-400">${day.temp_min}°</span>
+                        </div>
                     </div>
                 `;
             }).join('')}
+        </div>
+    `;
+}
+
+// 予報エラー表示
+function showForecastError(errorMessage) {
+    const container = document.getElementById('weather-forecast');
+    if (!container) return;
+    
+    container.innerHTML = `
+        <div class="text-xs font-semibold mb-2">5日間予報</div>
+        <div class="text-center py-4">
+            <i class="fas fa-exclamation-triangle text-2xl text-red-400 mb-2"></i>
+            <div class="text-sm text-gray-300">予報データの取得に失敗しました</div>
+            <div class="text-xs text-red-300 mt-1">${errorMessage}</div>
         </div>
     `;
 }
@@ -200,29 +265,48 @@ function getLocationAndWeather() {
     }
 }
 
-// 緯度・経度で天気データを取得
+// 座標指定で天気データを取得
 async function fetchWeatherDataWithCoords(lat, lon) {
     try {
         const response = await fetch(`/api/weather?lat=${lat}&lon=${lon}`);
         if (!response.ok) {
-            console.warn('Weather API not available, showing default weather display');
-            showDefaultWeather();
-            return;
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.details || `HTTP ${response.status}: ${response.statusText}`);
         }
+        
         weatherData = await response.json();
+        lastUpdate = new Date();
         updateWeatherDisplay();
+        
     } catch (error) {
-        console.warn('Error fetching weather data:', error);
-        showDefaultWeather();
+        console.error('Error fetching weather data with coordinates:', error);
+        showWeatherError(error.message);
     }
 }
 
+// 天気を手動で更新
+function refreshWeather() {
+    if (isLoading) return;
+    getLocationAndWeather();
+}
+
+// グローバル関数として公開
+window.refreshWeather = refreshWeather;
+
 // 初期化
 export function initWeather() {
+    // 初回読み込み
     getLocationAndWeather();
-    // 30分ごとに天気データを更新
-    setInterval(getLocationAndWeather, 30 * 60 * 1000);
+    
+    // 30分ごとに自動更新
+    setInterval(() => {
+        if (!isLoading) {
+            getLocationAndWeather();
+        }
+    }, 30 * 60 * 1000);
 }
 
 // グローバルスコープで利用できるようにする
 window.fetchWeatherData = fetchWeatherData;
+
+
