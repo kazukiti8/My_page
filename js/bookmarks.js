@@ -24,25 +24,111 @@ const closeSettingsBtn = document.getElementById('close-settings-btn');
 let categories = JSON.parse(localStorage.getItem('categories')) || [];
 let currentCategoryIdForBookmark = null;
 
+// カテゴリーアイコンのマッピング
+const categoryIcons = {
+    'social': 'fas fa-users',
+    'work': 'fas fa-briefcase',
+    'entertainment': 'fas fa-gamepad',
+    'news': 'fas fa-newspaper',
+    'shopping': 'fas fa-shopping-cart',
+    'education': 'fas fa-graduation-cap',
+    'technology': 'fas fa-laptop',
+    'health': 'fas fa-heartbeat',
+    'finance': 'fas fa-chart-line',
+    'travel': 'fas fa-plane',
+    'food': 'fas fa-utensils',
+    'sports': 'fas fa-futbol',
+    'music': 'fas fa-music',
+    'video': 'fas fa-video',
+    'tools': 'fas fa-tools',
+    'default': 'fas fa-folder'
+};
+
+// URLパターンに基づくアイコンのマッピング
+const urlIcons = {
+    'youtube.com': 'fab fa-youtube',
+    'youtu.be': 'fab fa-youtube',
+    'github.com': 'fab fa-github',
+    'twitter.com': 'fab fa-twitter',
+    'x.com': 'fab fa-twitter',
+    'facebook.com': 'fab fa-facebook',
+    'instagram.com': 'fab fa-instagram',
+    'linkedin.com': 'fab fa-linkedin',
+    'reddit.com': 'fab fa-reddit',
+    'discord.com': 'fab fa-discord',
+    'slack.com': 'fab fa-slack',
+    'zoom.us': 'fas fa-video',
+    'meet.google.com': 'fas fa-video',
+    'teams.microsoft.com': 'fas fa-video',
+    'amazon.com': 'fab fa-amazon',
+    'amazon.co.jp': 'fab fa-amazon',
+    'rakuten.co.jp': 'fas fa-shopping-cart',
+    'yahoo.co.jp': 'fas fa-search',
+    'google.com': 'fab fa-google',
+    'gmail.com': 'fas fa-envelope',
+    'outlook.com': 'fas fa-envelope',
+    'hotmail.com': 'fas fa-envelope',
+    'notion.so': 'fas fa-sticky-note',
+    'figma.com': 'fab fa-figma',
+    'trello.com': 'fab fa-trello',
+    'asana.com': 'fas fa-tasks',
+    'dropbox.com': 'fab fa-dropbox',
+    'drive.google.com': 'fab fa-google-drive',
+    'onedrive.live.com': 'fas fa-cloud',
+    'spotify.com': 'fab fa-spotify',
+    'apple.com': 'fab fa-apple',
+    'microsoft.com': 'fab fa-microsoft',
+    'stackoverflow.com': 'fab fa-stack-overflow',
+    'medium.com': 'fab fa-medium',
+    'dev.to': 'fab fa-dev',
+    'qiita.com': 'fas fa-code',
+    'zenn.dev': 'fas fa-code',
+    'note.com': 'fas fa-edit',
+    'hatena.ne.jp': 'fas fa-bookmark',
+    'wikipedia.org': 'fab fa-wikipedia-w',
+    'docs.google.com': 'fas fa-file-alt',
+    'sheets.google.com': 'fas fa-table',
+    'slides.google.com': 'fas fa-presentation',
+    'calendar.google.com': 'fas fa-calendar',
+    'maps.google.com': 'fas fa-map-marker-alt',
+    'translate.google.com': 'fas fa-language',
+    'default': 'fas fa-globe'
+};
+
+// カテゴリー名からアイコンを取得
+function getCategoryIcon(categoryName) {
+    const lowerName = categoryName.toLowerCase();
+    for (const [key, icon] of Object.entries(categoryIcons)) {
+        if (lowerName.includes(key)) {
+            return icon;
+        }
+    }
+    return categoryIcons.default;
+}
+
+// URLからアイコンを取得
+function getUrlIcon(url) {
+    const domain = new URL(url).hostname.toLowerCase();
+    for (const [pattern, icon] of Object.entries(urlIcons)) {
+        if (domain.includes(pattern)) {
+            return icon;
+        }
+    }
+    return urlIcons.default;
+}
+
 // 改善されたFavicon表示用のHTML要素を作成
 function createFaviconElement(url, bookmarkName) {
     const container = document.createElement('div');
     container.className = 'w-5 h-5 mr-3 flex-shrink-0 relative';
     
-    // デフォルトアイコン（SVG）
-    const defaultIcon = `
-        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <rect width="20" height="20" rx="4" fill="#E5E7EB"/>
-            <path d="M10 6C11.1046 6 12 6.89543 12 8C12 9.10457 11.1046 10 10 10C8.89543 10 8 9.10457 8 8C8 6.89543 8.89543 6 10 6Z" fill="#9CA3AF"/>
-            <path d="M10 12C8.89543 12 8 10.8954 8 9.75H12C12 10.8954 11.1046 12 10 12Z" fill="#9CA3AF"/>
-        </svg>
-    `;
+    // URLに基づくアイコンを取得
+    const urlIcon = getUrlIcon(url);
     
-    // デフォルトアイコンを表示
-    const fallbackIcon = document.createElement('div');
-    fallbackIcon.className = 'w-5 h-5';
-    fallbackIcon.innerHTML = defaultIcon;
-    container.appendChild(fallbackIcon);
+    // デフォルトアイコン（Font Awesome）
+    const defaultIcon = document.createElement('i');
+    defaultIcon.className = `${urlIcon} text-gray-600 text-lg`;
+    container.appendChild(defaultIcon);
     
     // 実際のFaviconを非同期で読み込み
     faviconService.getFavicon(url, 20).then(faviconUrl => {
@@ -56,7 +142,7 @@ function createFaviconElement(url, bookmarkName) {
             
             img.onload = () => {
                 img.style.opacity = '1';
-                fallbackIcon.style.display = 'none';
+                defaultIcon.style.display = 'none';
             };
             
             img.onerror = () => {
@@ -147,8 +233,11 @@ export function renderCategories() {
         
         const categoryTitle = document.createElement('h3');
         categoryTitle.className = 'text-lg font-semibold text-white flex items-center';
+        
+        // カテゴリー名に基づくアイコンを取得
+        const categoryIcon = getCategoryIcon(category.name);
         categoryTitle.innerHTML = `
-            <i class="fas fa-folder mr-2 text-blue-300"></i>
+            <i class="${categoryIcon} mr-2 text-blue-300"></i>
             ${category.name}
         `;
         
@@ -199,10 +288,26 @@ export function renderCategories() {
                 const faviconElement = createFaviconElement(bookmark.url, bookmark.name);
                 bookmarkHeader.appendChild(faviconElement);
                 
+                const bookmarkContent = document.createElement('div');
+                bookmarkContent.className = 'flex-1 min-w-0';
+                
                 const bookmarkTitle = document.createElement('div');
-                bookmarkTitle.className = 'font-medium text-gray-800 truncate flex-1 text-sm';
+                bookmarkTitle.className = 'font-medium text-gray-800 truncate text-sm';
                 bookmarkTitle.textContent = bookmark.name;
-                bookmarkHeader.appendChild(bookmarkTitle);
+                bookmarkContent.appendChild(bookmarkTitle);
+                
+                // URLのドメインを表示
+                try {
+                    const domain = new URL(bookmark.url).hostname;
+                    const domainElement = document.createElement('div');
+                    domainElement.className = 'text-xs text-gray-500 truncate';
+                    domainElement.textContent = domain;
+                    bookmarkContent.appendChild(domainElement);
+                } catch (e) {
+                    // URLが無効な場合は何も表示しない
+                }
+                
+                bookmarkHeader.appendChild(bookmarkContent);
                 
                 const bookmarkActions = document.createElement('div');
                 bookmarkActions.className = 'absolute top-2 right-2 flex space-x-1 bookmark-actions opacity-0 group-hover:opacity-100 transition-opacity duration-200';
