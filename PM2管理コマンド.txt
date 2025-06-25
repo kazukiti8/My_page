@@ -1,0 +1,19 @@
+サーバーの状態確認:pm2 status
+ログの確認:pm2 logs my-serene-start-page
+サーバーの再起動:pm2 restart my-serene-start-page
+サーバーの停止:pm2 stop my-serene-start-page
+サーバーの削除:pm2 delete my-serene-start-page
+
+# WindowsでのPM2自動起動設定
+# 1. PM2の設定を保存
+pm2 save
+
+# 2. Windowsのタスクスケジューラーで自動起動を設定
+# 以下のコマンドを管理者権限のPowerShellで実行:
+# pm2 resurrect
+
+# または、start.batファイルをWindowsのスタートアップフォルダに配置:
+# %APPDATA%\Microsoft\Windows\Start Menu\Programs\Startup\
+
+# 手動でPM2を起動する場合:
+pm2 resurrect
