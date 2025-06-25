@@ -26,7 +26,7 @@
         </header>
 
         <!-- Main content area -->
-        <main class="flex-1 p-4 grid main-layout" style="grid-template-columns: 1fr 3fr 1fr; grid-template-areas: 'left center right';">
+        <main class="flex-1 p-4 grid main-layout" style="grid-template-columns: 1fr 3fr 1fr; grid-template-rows: auto auto; grid-template-areas: 'left center right' 'left center-bottom right';">
             <!-- Left column - Date, time and weather (placeholder) -->
             <div class="left-column p-4" style="grid-area: left;">
                 <div class="blur-bg rounded-xl p-4 mb-4 text-white">
@@ -121,6 +121,44 @@
                         <div class="text-center text-gray-400 text-sm py-4">
                             <i class="fas fa-newspaper text-2xl mb-2"></i>
                             <p>ニュースフィードを追加してください</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Center bottom - Calendar and Map -->
+            <div class="center-bottom p-4" style="grid-area: center-bottom;">
+                <div class="grid grid-cols-2 gap-4 h-full">
+                    <!-- Google Calendar -->
+                    <div class="blur-bg rounded-xl p-4 text-white">
+                        <div class="flex items-center mb-3">
+                            <i class="fas fa-calendar text-2xl mr-3"></i>
+                            <h3 class="text-lg font-semibold">カレンダー</h3>
+                        </div>
+                        <div class="calendar-container" style="height: 250px; overflow: hidden;">
+                            <iframe 
+                                src="https://calendar.google.com/calendar/embed?src=ririnnba8%40gmail.com&ctz=Asia%2FTokyo&mode=AGENDA" 
+                                style="border: 0; width: 100%; height: 100%;" 
+                                frameborder="0" 
+                                scrolling="no">
+                            </iframe>
+                        </div>
+                    </div>
+
+                    <!-- Google Maps -->
+                    <div class="blur-bg rounded-xl p-4 text-white">
+                        <div class="flex items-center mb-3">
+                            <i class="fas fa-map-marker-alt text-2xl mr-3"></i>
+                            <h3 class="text-lg font-semibold">マップ</h3>
+                        </div>
+                        <div class="map-container" style="height: 250px; overflow: hidden;">
+                            <iframe 
+                                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3240.827853398542!2d139.76454987677598!3d35.68124053757839!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x60188bfbd89f700b%3A0x277c49ba34ed38!2z5p2x5Lqs6aeF!5e0!3m2!1sja!2sjp!4v1703123456789!5m2!1sja!2sjp" 
+                                style="border: 0; width: 100%; height: 100%;" 
+                                allowfullscreen="" 
+                                loading="lazy" 
+                                referrerpolicy="no-referrer-when-downgrade">
+                            </iframe>
                         </div>
                     </div>
                 </div>
