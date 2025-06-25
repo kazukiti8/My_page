@@ -78,7 +78,7 @@ async function fetchWeatherData() {
 function updateWeatherDisplay() {
     if (!weatherData) return;
 
-    const weatherContainer = document.querySelector('.left-column .blur-bg:last-child');
+    const weatherContainer = document.getElementById('weather-widget');
     if (!weatherContainer) return;
 
     const iconClass = weatherIcons[weatherData.icon] || 'fas fa-cloud';
@@ -119,7 +119,7 @@ function updateWeatherDisplay() {
 
 // 読み込み中の天気表示
 function showLoadingWeather() {
-    const weatherContainer = document.querySelector('.left-column .blur-bg:last-child');
+    const weatherContainer = document.getElementById('weather-widget');
     if (!weatherContainer) return;
 
     weatherContainer.innerHTML = `
@@ -147,7 +147,7 @@ function showLoadingWeather() {
 
 // エラー時の天気表示
 function showWeatherError(errorMessage) {
-    const weatherContainer = document.querySelector('.left-column .blur-bg:last-child');
+    const weatherContainer = document.getElementById('weather-widget');
     if (!weatherContainer) return;
 
     const retryButton = retryCount < maxRetries ? 
