@@ -14,6 +14,13 @@ const bookmarkCategorySelect = document.getElementById('bookmark-category-select
 const saveBookmarkBtn = document.getElementById('save-bookmark-btn');
 const cancelBookmarkBtn = document.getElementById('cancel-bookmark-btn');
 
+// カテゴリー管理メニュー用の要素
+const categorySettingsBtn = document.getElementById('category-settings-btn');
+const categorySettingsModal = document.getElementById('category-settings-modal');
+const editCategoriesBtn = document.getElementById('edit-categories-btn');
+const deleteCategoriesBtn = document.getElementById('delete-categories-btn');
+const closeSettingsBtn = document.getElementById('close-settings-btn');
+
 let categories = JSON.parse(localStorage.getItem('categories')) || [];
 let currentCategoryIdForBookmark = null;
 
@@ -126,13 +133,17 @@ export function renderCategories() {
         return;
     }
     
+    // カテゴリーを横並びにするためのコンテナを作成
+    const categoriesGrid = document.createElement('div');
+    categoriesGrid.className = 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6';
+    
     categories.forEach(category => {
         const categoryElement = document.createElement('div');
-        categoryElement.className = 'mb-6 category-item';
+        categoryElement.className = 'category-item bg-white bg-opacity-10 backdrop-blur-sm rounded-lg p-4 border border-white border-opacity-20';
         categoryElement.dataset.categoryId = category.id;
         
         const categoryHeader = document.createElement('div');
-        categoryHeader.className = 'flex justify-between items-center mb-2';
+        categoryHeader.className = 'flex justify-between items-center mb-3';
         
         const categoryTitle = document.createElement('h3');
         categoryTitle.className = 'text-lg font-semibold text-white flex items-center';
@@ -162,38 +173,13 @@ export function renderCategories() {
             bookmarkModal.classList.remove('hidden');
         });
         
-        const editCategoryBtn = document.createElement('button');
-        editCategoryBtn.className = 'bg-yellow-500 hover:bg-yellow-600 text-white px-2 py-1 rounded text-xs';
-        editCategoryBtn.innerHTML = '<i class="fas fa-edit"></i>';
-        editCategoryBtn.addEventListener('click', () => {
-            const newName = prompt('Edit category name:', category.name);
-            if (newName && newName.trim() !== '') {
-                category.name = newName.trim();
-                saveCategories();
-                renderCategories();
-            }
-        });
-        
-        const deleteCategoryBtn = document.createElement('button');
-        deleteCategoryBtn.className = 'bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded text-xs';
-        deleteCategoryBtn.innerHTML = '<i class="fas fa-trash"></i>';
-        deleteCategoryBtn.addEventListener('click', () => {
-            if (confirm(`Delete category "${category.name}" and all its bookmarks?`)) {
-                categories = categories.filter(c => c.id !== category.id);
-                saveCategories();
-                renderCategories();
-            }
-        });
-        
         categoryActions.appendChild(addBookmarkBtn);
-        categoryActions.appendChild(editCategoryBtn);
-        categoryActions.appendChild(deleteCategoryBtn);
         
         categoryHeader.appendChild(categoryTitle);
         categoryHeader.appendChild(categoryActions);
         
         const bookmarksList = document.createElement('div');
-        bookmarksList.className = 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3';
+        bookmarksList.className = 'space-y-2';
         
         if (category.bookmarks && category.bookmarks.length > 0) {
             category.bookmarks.forEach(bookmark => {
@@ -217,10 +203,6 @@ export function renderCategories() {
                 bookmarkTitle.className = 'font-medium text-gray-800 truncate flex-1 text-sm';
                 bookmarkTitle.textContent = bookmark.name;
                 bookmarkHeader.appendChild(bookmarkTitle);
-                
-                const bookmarkUrl = document.createElement('div');
-                bookmarkUrl.className = 'text-xs text-gray-500 truncate ml-8';
-                bookmarkUrl.textContent = bookmark.url;
                 
                 const bookmarkActions = document.createElement('div');
                 bookmarkActions.className = 'absolute top-2 right-2 flex space-x-1 bookmark-actions opacity-0 group-hover:opacity-100 transition-opacity duration-200';
@@ -296,52 +278,64 @@ export function renderCategories() {
                 bookmarkActions.appendChild(deleteBookmarkBtn);
                 
                 bookmarkLink.appendChild(bookmarkHeader);
-                bookmarkLink.appendChild(bookmarkUrl);
+                bookmarkLink.appendChild(bookmarkTitle);
                 bookmarkElement.appendChild(bookmarkLink);
                 bookmarkElement.appendChild(bookmarkActions);
                 bookmarksList.appendChild(bookmarkElement);
             });
         } else {
             const emptyMessage = document.createElement('div');
-            emptyMessage.className = 'text-gray-500 text-sm italic col-span-full';
+            emptyMessage.className = 'text-gray-500 text-sm italic text-center py-4';
             emptyMessage.textContent = 'No bookmarks yet. Click "Add Bookmark" to add one.';
             bookmarksList.appendChild(emptyMessage);
         }
         
         categoryElement.appendChild(categoryHeader);
         categoryElement.appendChild(bookmarksList);
-        bookmarksContainer.appendChild(categoryElement);
+        categoriesGrid.appendChild(categoryElement);
     });
+    
+    bookmarksContainer.appendChild(categoriesGrid);
 }
 
 export function setupBookmarkEvents() {
-    // Favicon更新ボタン
-    const refreshFaviconsBtn = document.getElementById('refresh-favicons-btn');
-    if (refreshFaviconsBtn) {
-        refreshFaviconsBtn.addEventListener('click', async () => {
-            refreshFaviconsBtn.disabled = true;
-            refreshFaviconsBtn.innerHTML = '<i class="fas fa-spinner animate-spin mr-1"></i> 更新中...';
-            
-            try {
-                await refreshAllFavicons();
-            } catch (error) {
-                console.error('Error refreshing favicons:', error);
-                if (window.showToast) {
-                    window.showToast.error('Faviconの更新に失敗しました');
-                }
-            } finally {
-                refreshFaviconsBtn.disabled = false;
-                refreshFaviconsBtn.innerHTML = '<i class="fas fa-sync-alt mr-1"></i> Favicon';
-            }
+    // カテゴリー管理メニューボタン
+    if (categorySettingsBtn) {
+        categorySettingsBtn.addEventListener('click', () => {
+            categorySettingsModal.classList.remove('hidden');
+        });
+    }
+
+    // カテゴリー管理メニューの各ボタン
+    if (addCategoryBtn) {
+        addCategoryBtn.addEventListener('click', () => {
+            categorySettingsModal.classList.add('hidden');
+            categoryNameInput.value = '';
+            categoryModal.classList.remove('hidden');
+        });
+    }
+
+    if (editCategoriesBtn) {
+        editCategoriesBtn.addEventListener('click', () => {
+            categorySettingsModal.classList.add('hidden');
+            showEditCategoriesModal();
+        });
+    }
+
+    if (deleteCategoriesBtn) {
+        deleteCategoriesBtn.addEventListener('click', () => {
+            categorySettingsModal.classList.add('hidden');
+            showDeleteCategoriesModal();
+        });
+    }
+
+    if (closeSettingsBtn) {
+        closeSettingsBtn.addEventListener('click', () => {
+            categorySettingsModal.classList.add('hidden');
         });
     }
 
     // Category modal
-    addCategoryBtn.addEventListener('click', () => {
-        categoryNameInput.value = '';
-        categoryModal.classList.remove('hidden');
-    });
-    
     saveCategoryBtn.addEventListener('click', () => {
         if (categoryNameInput.value.trim()) {
             const newCategory = {
@@ -406,7 +400,7 @@ export function setupBookmarkEvents() {
     });
     
     // Close modals when clicking outside
-    [categoryModal, bookmarkModal].forEach(modal => {
+    [categoryModal, bookmarkModal, categorySettingsModal].forEach(modal => {
         modal.addEventListener('click', (e) => {
             if (e.target === modal) {
                 modal.classList.add('hidden');
@@ -417,6 +411,140 @@ export function setupBookmarkEvents() {
                 }
             }
         });
+    });
+}
+
+// カテゴリー編集モーダルを表示
+function showEditCategoriesModal() {
+    if (categories.length === 0) {
+        alert('編集するカテゴリーがありません。');
+        return;
+    }
+
+    const modal = document.createElement('div');
+    modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-20';
+    modal.innerHTML = `
+        <div class="bg-white rounded-lg p-6 w-full max-w-md max-h-96 overflow-y-auto">
+            <h3 class="text-xl font-bold mb-4">カテゴリーを編集</h3>
+            <div class="space-y-3">
+                ${categories.map(category => `
+                    <div class="flex items-center space-x-2">
+                        <input type="text" value="${category.name}" 
+                               class="flex-1 px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                               data-category-id="${category.id}">
+                        <button class="save-edit-btn bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded text-sm"
+                                data-category-id="${category.id}">
+                            保存
+                        </button>
+                    </div>
+                `).join('')}
+            </div>
+            <div class="flex justify-end mt-4">
+                <button class="close-edit-modal px-4 py-2 text-gray-600 hover:text-gray-800">閉じる</button>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    // 保存ボタンのイベント
+    modal.querySelectorAll('.save-edit-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const categoryId = btn.dataset.categoryId;
+            const input = modal.querySelector(`input[data-category-id="${categoryId}"]`);
+            const newName = input.value.trim();
+            
+            if (newName) {
+                const category = categories.find(c => c.id === categoryId);
+                if (category) {
+                    category.name = newName;
+                    saveCategories();
+                    renderCategories();
+                    if (window.showToast) {
+                        window.showToast.success(`カテゴリ「${newName}」を更新しました`);
+                    }
+                }
+            }
+        });
+    });
+
+    // 閉じるボタンのイベント
+    modal.querySelector('.close-edit-modal').addEventListener('click', () => {
+        document.body.removeChild(modal);
+    });
+
+    // 外側クリックで閉じる
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            document.body.removeChild(modal);
+        }
+    });
+}
+
+// カテゴリー削除モーダルを表示
+function showDeleteCategoriesModal() {
+    if (categories.length === 0) {
+        alert('削除するカテゴリーがありません。');
+        return;
+    }
+
+    const modal = document.createElement('div');
+    modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-20';
+    modal.innerHTML = `
+        <div class="bg-white rounded-lg p-6 w-full max-w-md max-h-96 overflow-y-auto">
+            <h3 class="text-xl font-bold mb-4 text-red-600">カテゴリーを削除</h3>
+            <p class="text-sm text-gray-600 mb-4">削除すると、そのカテゴリー内のすべてのブックマークも削除されます。</p>
+            <div class="space-y-2">
+                ${categories.map(category => `
+                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded">
+                        <div>
+                            <div class="font-medium">${category.name}</div>
+                            <div class="text-sm text-gray-500">${category.bookmarks ? category.bookmarks.length : 0}個のブックマーク</div>
+                        </div>
+                        <button class="delete-category-btn bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm"
+                                data-category-id="${category.id}" data-category-name="${category.name}">
+                            削除
+                        </button>
+                    </div>
+                `).join('')}
+            </div>
+            <div class="flex justify-end mt-4">
+                <button class="close-delete-modal px-4 py-2 text-gray-600 hover:text-gray-800">閉じる</button>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    // 削除ボタンのイベント
+    modal.querySelectorAll('.delete-category-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const categoryId = btn.dataset.categoryId;
+            const categoryName = btn.dataset.categoryName;
+            
+            if (confirm(`カテゴリ「${categoryName}」とその中のすべてのブックマークを削除しますか？`)) {
+                categories = categories.filter(c => c.id !== categoryId);
+                saveCategories();
+                renderCategories();
+                if (window.showToast) {
+                    window.showToast.success(`カテゴリ「${categoryName}」を削除しました`);
+                }
+                // 削除されたカテゴリーの要素を削除
+                btn.closest('.flex').remove();
+            }
+        });
+    });
+
+    // 閉じるボタンのイベント
+    modal.querySelector('.close-delete-modal').addEventListener('click', () => {
+        document.body.removeChild(modal);
+    });
+
+    // 外側クリックで閉じる
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            document.body.removeChild(modal);
+        }
     });
 }
 
