@@ -1,6 +1,8 @@
 // ニュースフィード機能
 let newsFeeds = [];
 let newsItems = [];
+let isLoading = false;
+let lastUpdate = null;
 
 // プリセットフィードの定義
 const presetFeeds = {
@@ -126,14 +128,38 @@ function toggleNewsFeed(feedId) {
 
 // すべてのニュースフィードからニュースを取得
 async function fetchAllNews() {
-    newsItems = [];
-    for (const feed of newsFeeds) {
-        if (feed.enabled) {
-            await fetchNewsFromFeed(feed);
+    if (isLoading) return;
+    
+    isLoading = true;
+    renderNews(); // 読み込み状態を表示
+    
+    try {
+        newsItems = [];
+        for (const feed of newsFeeds) {
+            if (feed.enabled) {
+                await fetchNewsFromFeed(feed);
+            }
         }
+        saveNewsItems();
+        lastUpdate = new Date();
+        renderNews();
+        
+        // 成功メッセージを表示
+        if (window.showToast) {
+            window.showToast.success('ニュースを更新しました');
+        }
+        
+    } catch (error) {
+        console.error('Error fetching all news:', error);
+        
+        // エラーメッセージを表示
+        if (window.showToast) {
+            window.showToast.error('ニュースの取得に失敗しました');
+        }
+    } finally {
+        isLoading = false;
+        renderNews();
     }
-    saveNewsItems();
-    renderNews();
 }
 
 // 特定のフィードからニュースを取得
@@ -180,12 +206,12 @@ function showNewsError(feedName, errorMessage) {
     existingErrors.forEach(error => error.remove());
     
     const errorDiv = document.createElement('div');
-    errorDiv.className = 'news-error text-center text-red-400 text-sm py-2 bg-red-50 bg-opacity-50 rounded-lg';
+    errorDiv.className = 'news-error text-center text-red-400 text-sm py-3 bg-red-50 bg-opacity-50 rounded-lg border border-red-200 border-opacity-50 mb-3';
     errorDiv.innerHTML = `
         <i class="fas fa-exclamation-triangle mr-1"></i>
         <span class="font-medium">${feedName}</span>からのニュース取得に失敗しました
-        <br><span class="text-xs">${errorMessage}</span>
-        <br><button class="retry-feed-btn text-blue-400 hover:text-blue-300 text-xs mt-1" data-feed="${feedName}">
+        <br><span class="text-xs text-red-300">${errorMessage}</span>
+        <br><button class="retry-feed-btn text-blue-400 hover:text-blue-300 text-xs mt-2 px-3 py-1 bg-blue-50 rounded-full transition-colors" data-feed="${feedName}">
             <i class="fas fa-sync-alt mr-1"></i>再試行
         </button>
     `;
@@ -206,11 +232,25 @@ function showNewsError(feedName, errorMessage) {
 function renderNews() {
     const newsContainer = document.getElementById('news-container');
     
+    if (isLoading) {
+        newsContainer.innerHTML = `
+            <div class="text-center py-8">
+                <i class="fas fa-spinner animate-spin text-3xl text-blue-400 mb-4"></i>
+                <div class="text-sm text-gray-300">ニュースを取得中...</div>
+            </div>
+        `;
+        return;
+    }
+    
     if (newsItems.length === 0) {
         newsContainer.innerHTML = `
-            <div class="text-center text-gray-400 text-sm py-4">
-                <i class="fas fa-newspaper text-2xl mb-2"></i>
-                <p>ニュースフィードを追加してください</p>
+            <div class="text-center py-8">
+                <i class="fas fa-newspaper text-3xl text-gray-400 mb-4"></i>
+                <p class="text-gray-400 text-sm mb-4">ニュースフィードを追加してください</p>
+                <button onclick="document.getElementById('add-feed-btn').click()" 
+                        class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-full text-sm transition-colors">
+                    <i class="fas fa-plus mr-2"></i>フィードを追加
+                </button>
             </div>
         `;
         return;
@@ -223,42 +263,69 @@ function renderNews() {
         return dateB - dateA;
     });
     
-    // 最新の10件のみ表示
-    const displayNews = sortedNews.slice(0, 10);
+    // 最新の15件まで表示
+    const displayNews = sortedNews.slice(0, 15);
     
-    newsContainer.innerHTML = displayNews.map(item => {
-        // ソース名を抽出（Googleニュースの場合）
-        const sourceName = extractSourceName(item.title, item.feedName);
-        const cleanTitle = cleanNewsTitle(item.title);
-        
-        return `
-            <div class="news-item bg-white bg-opacity-80 rounded-lg p-3 hover:bg-opacity-90 transition-all duration-200">
-                <div class="flex justify-between items-start mb-2">
-                    <span class="text-xs text-blue-600 font-medium">${sourceName}</span>
-                    <span class="text-xs text-gray-500">${formatDate(item.pubDate || item.isoDate)}</span>
-                </div>
-                <a href="${item.link}" target="_blank" rel="noopener noreferrer" 
-                   class="block text-sm font-medium text-gray-800 hover:text-blue-600 transition-colors duration-200">
-                    ${cleanTitle}
-                </a>
-                ${item.contentSnippet ? `
-                    <p class="text-xs text-gray-600 mt-1 line-clamp-2">${item.contentSnippet}</p>
-                ` : ''}
+    newsContainer.innerHTML = `
+        ${lastUpdate ? `
+            <div class="text-xs text-gray-400 mb-3 text-center">
+                <i class="fas fa-clock mr-1"></i>最終更新: ${lastUpdate.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })}
             </div>
-        `;
-    }).join('');
+        ` : ''}
+        <div class="space-y-3">
+            ${displayNews.map(item => {
+                // ソース名を抽出（Googleニュースの場合）
+                const sourceName = extractSourceName(item.title, item.feedName);
+                const cleanTitle = cleanNewsTitle(item.title);
+                const timeAgo = formatDate(item.pubDate || item.isoDate);
+                
+                return `
+                    <div class="news-item bg-white bg-opacity-90 rounded-lg p-4 hover:bg-opacity-95 transition-all duration-200 shadow-sm hover:shadow-md">
+                        <div class="flex justify-between items-start mb-3">
+                            <div class="flex items-center">
+                                <span class="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full font-medium">${sourceName}</span>
+                                <span class="text-xs text-gray-500 ml-2">${timeAgo}</span>
+                            </div>
+                            <button onclick="openNewsInNewTab('${item.link}')" 
+                                    class="text-gray-400 hover:text-blue-500 transition-colors" 
+                                    title="新しいタブで開く">
+                                <i class="fas fa-external-link-alt text-xs"></i>
+                            </button>
+                        </div>
+                        <a href="${item.link}" target="_blank" rel="noopener noreferrer" 
+                           class="block text-sm font-semibold text-gray-800 hover:text-blue-600 transition-colors duration-200 leading-relaxed">
+                            ${cleanTitle}
+                        </a>
+                        ${item.contentSnippet ? `
+                            <p class="text-xs text-gray-600 mt-2 line-clamp-2 leading-relaxed">${item.contentSnippet}</p>
+                        ` : ''}
+                    </div>
+                `;
+            }).join('')}
+        </div>
+        ${newsItems.length > 15 ? `
+            <div class="text-center mt-4">
+                <span class="text-xs text-gray-400">最新の15件を表示中（全${newsItems.length}件）</span>
+            </div>
+        ` : ''}
+    `;
+}
+
+// 新しいタブでニュースを開く
+function openNewsInNewTab(url) {
+    window.open(url, '_blank', 'noopener,noreferrer');
 }
 
 // ソース名を抽出（Googleニュースのタイトルから）
 function extractSourceName(title, feedName) {
-    if (feedName === 'Googleニュース') {
+    if (feedName && feedName.includes('Googleニュース')) {
         // Googleニュースのタイトル形式: "記事タイトル - ソース名"
         const match = title.match(/\s*-\s*([^-]+)$/);
         if (match) {
             return match[1].trim();
         }
     }
-    return feedName;
+    return feedName || 'Unknown';
 }
 
 // ニュースタイトルをクリーンアップ
@@ -277,11 +344,15 @@ function formatDate(dateString) {
     const date = new Date(dateString);
     const now = new Date();
     const diffTime = Math.abs(now - date);
+    const diffMinutes = Math.floor(diffTime / (1000 * 60));
+    const diffHours = Math.floor(diffTime / (1000 * 60 * 60));
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     
-    if (diffDays === 1) {
-        return '今日';
-    } else if (diffDays === 2) {
+    if (diffMinutes < 60) {
+        return `${diffMinutes}分前`;
+    } else if (diffHours < 24) {
+        return `${diffHours}時間前`;
+    } else if (diffDays === 1) {
         return '昨日';
     } else if (diffDays <= 7) {
         return `${diffDays - 1}日前`;
@@ -377,6 +448,8 @@ function setupNewsFeedModal() {
 function setupNewsRefresh() {
     const refreshBtn = document.getElementById('refresh-news-btn');
     refreshBtn.addEventListener('click', () => {
+        if (isLoading) return;
+        
         refreshBtn.classList.add('animate-spin');
         fetchAllNews().finally(() => {
             setTimeout(() => {
@@ -397,32 +470,36 @@ export function initNews() {
     }
     
     // 初回ユーザーまたはリセット希望者の場合、Googleニュースのみに設定
-    const isFirstTime = !localStorage.getItem('newsFeeds');
-    if (isFirstTime) {
-        resetToGoogleNewsOnly();
+    const hasInitialized = localStorage.getItem('newsInitialized');
+    if (!hasInitialized) {
+        localStorage.removeItem('newsFeeds');
+        localStorage.removeItem('newsItems');
+        localStorage.setItem('newsInitialized', 'true');
     }
     
     loadNewsFeeds();
     loadNewsItems();
     setupNewsFeedModal();
     setupNewsRefresh();
-    renderNews();
     
     // 初回読み込み
-    if (newsFeeds.some(feed => feed.enabled)) {
+    if (newsFeeds.length > 0) {
         fetchAllNews();
+    } else {
+        renderNews();
     }
     
     // 30分ごとに自動更新
     setInterval(() => {
-        if (newsFeeds.some(feed => feed.enabled)) {
+        if (!isLoading && newsFeeds.length > 0) {
             fetchAllNews();
         }
     }, 30 * 60 * 1000);
 }
 
-// ニュースを再読み込み
+// ニュースを手動で更新
 export function refreshNews() {
+    if (isLoading) return;
     fetchAllNews();
 }
 
@@ -447,5 +524,6 @@ function resetToGoogleNewsOnly() {
     }
 }
 
-// グローバル関数として公開（コンソールから実行可能）
-window.resetNewsToGoogleOnly = resetToGoogleNewsOnly; 
+// グローバル関数として公開
+window.refreshNews = refreshNews;
+window.openNewsInNewTab = openNewsInNewTab; 
