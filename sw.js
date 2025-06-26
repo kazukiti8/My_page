@@ -1,26 +1,27 @@
 // Service Worker for PWA functionality
-const CACHE_NAME = 'serene-start-page-v1.0.0';
+const CACHE_NAME = 'my-page-v1.0.0';
 const urlsToCache = [
   '/',
   '/index.html',
   '/css/main.css',
   '/css/theme.css',
   '/js/app.js',
-  '/js/clock.js',
-  '/js/search.js',
+  '/js/background.js',
   '/js/bookmarks.js',
-  '/js/todo.js',
-  '/js/notes.js',
-  '/js/news.js',
-  '/js/weather.js',
-  '/js/system-info.js',
-  '/js/toast.js',
-  '/js/theme.js',
-  '/js/widgets.js',
+  '/js/clock.js',
   '/js/error-handler.js',
   '/js/favicon-service.js',
-  '/js/background.js',
-  '/js/shortcuts.js'
+  '/js/mail.js',
+  '/js/news.js',
+  '/js/notes.js',
+  '/js/search.js',
+  '/js/shortcuts.js',
+  '/js/system-info.js',
+  '/js/theme.js',
+  '/js/toast.js',
+  '/js/todo.js',
+  '/js/weather.js',
+  '/personal-config.js'
 ];
 
 // Install event

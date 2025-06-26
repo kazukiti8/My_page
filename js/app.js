@@ -11,7 +11,6 @@ import { initSystemInfo } from './system-info.js';
 import toast from './toast.js';
 import shortcuts from './shortcuts.js';
 import themeManager from './theme.js';
-import widgetManager from './widgets.js';
 import errorHandler from './error-handler.js';
 
 function init() {
@@ -32,7 +31,6 @@ function init() {
         setupBookmarkEvents();
         setupTodoEvents();
         setupNotesEvents();
-        widgetManager.applyWidgetSettings();
         
         // 天気ウィジェットの初期化後にシステム情報ウィジェットを初期化
         setTimeout(() => {
