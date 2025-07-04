@@ -7,7 +7,6 @@ import { renderTodos, setupTodoEvents } from './todo.js';
 import { loadNotes, setupNotesEvents } from './notes.js';
 import { initNews } from './news.js';
 import { initWeather } from './weather.js';
-import { initSystemInfo } from './system-info.js';
 import toast from './toast.js';
 import shortcuts from './shortcuts.js';
 import themeManager from './theme.js';
@@ -32,10 +31,7 @@ function init() {
         setupTodoEvents();
         setupNotesEvents();
         
-        // 天気ウィジェットの初期化後にシステム情報ウィジェットを初期化
-        setTimeout(() => {
-            initSystemInfo();
-        }, 100);
+
         
         // 初期化完了メッセージ
         console.log('✅ アプリケーションの初期化が完了しました');
