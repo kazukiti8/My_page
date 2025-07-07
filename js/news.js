@@ -441,6 +441,7 @@ function setupNewsFeedModal() {
     // モーダルを開く
     addFeedBtn.addEventListener('click', () => {
         modal.classList.remove('hidden');
+        modal.classList.add('flex');
         feedNameInput.value = '';
         feedUrlInput.value = '';
         presetFeedsSelect.value = '';
@@ -462,18 +463,21 @@ function setupNewsFeedModal() {
         if (confirm('すべてのニュースフィードを削除して、Googleニュースのみにリセットしますか？')) {
             resetToGoogleNewsOnly();
             modal.classList.add('hidden');
+            modal.classList.remove('flex');
         }
     });
     
     // モーダルを閉じる
     cancelFeedBtn.addEventListener('click', () => {
         modal.classList.add('hidden');
+        modal.classList.remove('flex');
     });
     
     // モーダル外クリックで閉じる
     modal.addEventListener('click', (e) => {
         if (e.target === modal) {
             modal.classList.add('hidden');
+            modal.classList.remove('flex');
         }
     });
     
@@ -494,6 +498,7 @@ function setupNewsFeedModal() {
         
         addNewsFeed(name, url);
         modal.classList.add('hidden');
+        modal.classList.remove('flex');
     });
     
     // Enterキーで保存

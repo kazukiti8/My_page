@@ -214,6 +214,7 @@ export function renderCategories() {
         
         document.getElementById('first-category-btn').addEventListener('click', () => {
             categoryModal.classList.remove('hidden');
+            categoryModal.classList.add('flex');
         });
         
         return;
@@ -260,6 +261,7 @@ export function renderCategories() {
             bookmarkNameInput.value = '';
             bookmarkUrlInput.value = '';
             bookmarkModal.classList.remove('hidden');
+            bookmarkModal.classList.add('flex');
         });
         
         categoryActions.appendChild(addBookmarkBtn);
@@ -331,6 +333,7 @@ export function renderCategories() {
                     });
                     
                     bookmarkModal.classList.remove('hidden');
+                    bookmarkModal.classList.add('flex');
                     
                     // 編集時は一時的にイベントリスナーを削除して新しいものを追加
                     const originalClickHandler = saveBookmarkBtn.onclick;
@@ -356,6 +359,7 @@ export function renderCategories() {
                             saveCategories();
                             renderCategories();
                             bookmarkModal.classList.add('hidden');
+                            bookmarkModal.classList.remove('flex');
                             
                             // Reset form
                             bookmarkNameInput.value = '';
@@ -409,6 +413,7 @@ export function setupBookmarkEvents() {
     if (categorySettingsBtn) {
         categorySettingsBtn.addEventListener('click', () => {
             categorySettingsModal.classList.remove('hidden');
+            categorySettingsModal.classList.add('flex');
         });
     }
 
@@ -416,14 +421,17 @@ export function setupBookmarkEvents() {
     if (addCategoryBtn) {
         addCategoryBtn.addEventListener('click', () => {
             categorySettingsModal.classList.add('hidden');
+            categorySettingsModal.classList.remove('flex');
             categoryNameInput.value = '';
             categoryModal.classList.remove('hidden');
+            categoryModal.classList.add('flex');
         });
     }
 
     if (editCategoriesBtn) {
         editCategoriesBtn.addEventListener('click', () => {
             categorySettingsModal.classList.add('hidden');
+            categorySettingsModal.classList.remove('flex');
             showEditCategoriesModal();
         });
     }
@@ -431,6 +439,7 @@ export function setupBookmarkEvents() {
     if (deleteCategoriesBtn) {
         deleteCategoriesBtn.addEventListener('click', () => {
             categorySettingsModal.classList.add('hidden');
+            categorySettingsModal.classList.remove('flex');
             showDeleteCategoriesModal();
         });
     }
@@ -438,6 +447,7 @@ export function setupBookmarkEvents() {
     if (closeSettingsBtn) {
         closeSettingsBtn.addEventListener('click', () => {
             categorySettingsModal.classList.add('hidden');
+            categorySettingsModal.classList.remove('flex');
         });
     }
 
@@ -453,6 +463,7 @@ export function setupBookmarkEvents() {
             saveCategories();
             renderCategories();
             categoryModal.classList.add('hidden');
+            categoryModal.classList.remove('flex');
             
             // 保存完了メッセージを表示
             if (window.showToast) {
@@ -463,6 +474,7 @@ export function setupBookmarkEvents() {
     
     cancelCategoryBtn.addEventListener('click', () => {
         categoryModal.classList.add('hidden');
+        categoryModal.classList.remove('flex');
     });
     
     // Bookmark modal - 新規追加用
@@ -485,6 +497,7 @@ export function setupBookmarkEvents() {
                 saveCategories();
                 renderCategories();
                 bookmarkModal.classList.add('hidden');
+                bookmarkModal.classList.remove('flex');
                 
                 // Reset form
                 bookmarkNameInput.value = '';
@@ -500,6 +513,7 @@ export function setupBookmarkEvents() {
     
     cancelBookmarkBtn.addEventListener('click', () => {
         bookmarkModal.classList.add('hidden');
+        bookmarkModal.classList.remove('flex');
         // Reset form
         bookmarkNameInput.value = '';
         bookmarkUrlInput.value = '';
@@ -510,6 +524,7 @@ export function setupBookmarkEvents() {
         modal.addEventListener('click', (e) => {
             if (e.target === modal) {
                 modal.classList.add('hidden');
+                modal.classList.remove('flex');
                 // Reset bookmark form when closing
                 if (modal === bookmarkModal) {
                     bookmarkNameInput.value = '';
