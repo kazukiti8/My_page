@@ -3,7 +3,7 @@ import { loadBackgroundImage } from './background.js';
 import { updateClock } from './clock.js';
 import { setupSearchBox } from './search.js';
 import { renderCategories, setupBookmarkEvents } from './bookmarks.js';
-import { renderTodos, setupTodoEvents } from './todo.js';
+
 
 import { initNews } from './news.js';
 import { initWeather } from './weather.js';
@@ -22,13 +22,11 @@ function init() {
         setInterval(updateClock, 1000);
         loadBackgroundImage();
         renderCategories();
-        renderTodos();
 
         initNews();
         initWeather();
         setupSearchBox();
         setupBookmarkEvents();
-        setupTodoEvents();
 
         
 

@@ -6,7 +6,7 @@
 
 - 🌤️ **リアルタイム天気情報** - OpenWeatherMap APIを使用
 - 📚 **ブックマーク管理** - カテゴリー別整理
-- ✅ **ToDoリスト** - タスク管理
+
 - 📝 **クイックノート** - メモ機能
 - 📰 **ニュースフィード** - RSS/Atom対応
 - 📅 **Googleカレンダー** - スケジュール表示
@@ -88,6 +88,8 @@ NODE_ENV=production
    - 無料プランでAPIキーを取得
    - `.env`ファイルに設定
 
+
+
 ## 🎨 カスタマイズ
 
 ### テーマ
@@ -165,7 +167,6 @@ my-serene-start-page/
 │   ├── app.js          # メインアプリ
 │   ├── weather.js      # 天気機能
 │   ├── bookmarks.js    # ブックマーク
-│   ├── todo.js         # ToDo機能
 │   ├── news.js         # ニュース機能
 │   ├── system-info.js  # システム情報
 │   └── ...             # その他のモジュール
