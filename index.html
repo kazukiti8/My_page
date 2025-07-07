@@ -48,7 +48,7 @@
                         <div id="clock" class="text-xl font-semibold text-right"></div>
                     </div>
                 </div>
-                <div id="weather-widget" class="blur-bg rounded-xl p-4 text-white">
+                <div id="weather-widget" class="blur-bg rounded-xl p-4 text-white mb-4">
                     <div class="flex items-center mb-2">
                         <i class="fas fa-cloud-sun text-3xl mr-3"></i>
                         <div>
@@ -60,6 +60,23 @@
                     <div class="text-sm mt-1">H: --° L: --°</div>
                     <div class="text-xs mt-1 text-gray-300">湿度: --% | 風速: --m/s</div>
                     <div id="weather-forecast" class="mt-4 border-t border-white border-opacity-10 pt-2"></div>
+                </div>
+
+                <!-- Google Maps -->
+                <div class="blur-bg rounded-xl p-4 text-white">
+                    <div class="flex items-center mb-3">
+                        <i class="fas fa-map-marker-alt text-2xl mr-3"></i>
+                        <h3 class="text-lg font-semibold">マップ</h3>
+                    </div>
+                    <div class="map-container" style="height: 200px; overflow: hidden;">
+                        <iframe 
+                            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3240.827853398542!2d139.76454987677598!3d35.68124053757839!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x60188bfbd89f700b%3A0x277c49ba34ed38!2z5p2x5Lqs6aeF!5e0!3m2!1sja!2sjp!4v1703123456789!5m2!1sja!2sjp" 
+                            style="border: 0; width: 100%; height: 100%;" 
+                            allowfullscreen="" 
+                            loading="lazy" 
+                            referrerpolicy="no-referrer-when-downgrade">
+                        </iframe>
+                    </div>
                 </div>
             </div>
 
@@ -133,40 +150,20 @@
                 </div>
             </div>
 
-            <!-- Center bottom - Calendar and Map -->
+            <!-- Center bottom - Calendar -->
             <div class="center-bottom p-4" style="grid-area: center-bottom;">
-                <div class="grid grid-cols-2 gap-4 h-full">
-                    <!-- Google Calendar -->
-                    <div class="blur-bg rounded-xl p-4 text-white">
-                        <div class="flex items-center mb-3">
-                            <i class="fas fa-calendar text-2xl mr-3"></i>
-                            <h3 class="text-lg font-semibold">カレンダー</h3>
-                        </div>
-                        <div class="calendar-container" style="height: 250px; overflow: hidden;">
-                            <iframe 
-                                src="https://calendar.google.com/calendar/embed?src=ririnnba8%40gmail.com&ctz=Asia%2FTokyo&mode=AGENDA" 
-                                style="border: 0; width: 100%; height: 100%;" 
-                                frameborder="0" 
-                                scrolling="no">
-                            </iframe>
-                        </div>
+                <div class="blur-bg rounded-xl p-4 text-white">
+                    <div class="flex items-center mb-3">
+                        <i class="fas fa-calendar text-2xl mr-3"></i>
+                        <h3 class="text-lg font-semibold">カレンダー</h3>
                     </div>
-
-                    <!-- Google Maps -->
-                    <div class="blur-bg rounded-xl p-4 text-white">
-                        <div class="flex items-center mb-3">
-                            <i class="fas fa-map-marker-alt text-2xl mr-3"></i>
-                            <h3 class="text-lg font-semibold">マップ</h3>
-                        </div>
-                        <div class="map-container" style="height: 250px; overflow: hidden;">
-                            <iframe 
-                                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3240.827853398542!2d139.76454987677598!3d35.68124053757839!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x60188bfbd89f700b%3A0x277c49ba34ed38!2z5p2x5Lqs6aeF!5e0!3m2!1sja!2sjp!4v1703123456789!5m2!1sja!2sjp" 
-                                style="border: 0; width: 100%; height: 100%;" 
-                                allowfullscreen="" 
-                                loading="lazy" 
-                                referrerpolicy="no-referrer-when-downgrade">
-                            </iframe>
-                        </div>
+                    <div class="calendar-container" style="height: 250px; overflow: hidden;">
+                        <iframe 
+                            src="https://calendar.google.com/calendar/embed?height=600&wkst=1&ctz=Asia%2FTokyo&showPrint=0&src=cmlyaW5uYmE4QGdtYWlsLmNvbQ&src=amEuamFwYW5lc2UjaG9saWRheUBncm91cC52LmNhbGVuZGFyLmdvb2dsZS5jb20&color=%23039be5&color=%230b8043" 
+                            style="border: 0; width: 100%; height: 100%;" 
+                            frameborder="0" 
+                            scrolling="no">
+                        </iframe>
                     </div>
                 </div>
             </div>
