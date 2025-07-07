@@ -270,7 +270,9 @@ export function renderCategories() {
         categoryHeader.appendChild(categoryActions);
         
         const bookmarksList = document.createElement('div');
-        bookmarksList.className = 'space-y-2';
+        // ブックマークが4つ以上ある場合はスクロール可能にする
+        const shouldScroll = category.bookmarks && category.bookmarks.length > 3;
+        bookmarksList.className = `space-y-2 ${shouldScroll ? 'max-h-64 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-200' : ''}`;
         
         if (category.bookmarks && category.bookmarks.length > 0) {
             category.bookmarks.forEach(bookmark => {
