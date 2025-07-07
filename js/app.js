@@ -4,7 +4,7 @@ import { updateClock } from './clock.js';
 import { setupSearchBox } from './search.js';
 import { renderCategories, setupBookmarkEvents } from './bookmarks.js';
 import { renderTodos, setupTodoEvents } from './todo.js';
-import { loadNotes, setupNotesEvents } from './notes.js';
+
 import { initNews } from './news.js';
 import { initWeather } from './weather.js';
 import toast from './toast.js';
@@ -23,13 +23,13 @@ function init() {
         loadBackgroundImage();
         renderCategories();
         renderTodos();
-        loadNotes();
+
         initNews();
         initWeather();
         setupSearchBox();
         setupBookmarkEvents();
         setupTodoEvents();
-        setupNotesEvents();
+
         
 
         
