@@ -5,7 +5,7 @@ let isLoading = false;
 let lastUpdate = null;
 let retryCount = 0;
 const maxRetries = 3;
-let showDetailedWeather = false; // 詳細表示の切り替え
+// 詳細表示機能を削除
 
 // 天気アイコンのマッピング（OpenWeatherMap API用）
 const weatherIcons = {
@@ -123,9 +123,6 @@ function updateWeatherDisplay() {
                 <i class="fas fa-external-link-alt ml-2 text-sm opacity-60"></i>
             </div>
             <div class="flex items-center space-x-2">
-                <button onclick="toggleDetailedWeather()" class="text-blue-400 hover:text-blue-300 transition-colors" title="${showDetailedWeather ? '詳細を隠す' : '詳細を表示'}">
-                    <i class="fas fa-${showDetailedWeather ? 'compress' : 'expand'}-alt"></i>
-                </button>
                 <button onclick="refreshWeather()" class="text-blue-400 hover:text-blue-300 transition-colors" title="天気を更新">
                     <i class="fas fa-sync-alt ${isLoading ? 'animate-spin' : ''}"></i>
                 </button>
@@ -145,50 +142,11 @@ function updateWeatherDisplay() {
             </div>
         </div>
         
-        ${showDetailedWeather ? `
-            <div class="bg-white bg-opacity-10 rounded-lg p-3 mb-3">
-                <div class="grid grid-cols-2 gap-3 text-xs">
-                    <div class="flex items-center">
-                        <i class="fas fa-tint text-blue-400 mr-2"></i>
-                        <span>湿度: ${weatherData.humidity}%</span>
-                    </div>
-                    <div class="flex items-center">
-                        <i class="fas fa-wind text-gray-400 mr-2"></i>
-                        <span>風速: ${weatherData.wind_speed}m/s</span>
-                    </div>
-                    ${windDirection ? `
-                        <div class="flex items-center">
-                            <i class="fas fa-compass text-green-400 mr-2"></i>
-                            <span>風向: ${windDirection}</span>
-                        </div>
-                    ` : ''}
-                    ${weatherData.pressure ? `
-                        <div class="flex items-center">
-                            <i class="fas fa-tachometer-alt text-purple-400 mr-2"></i>
-                            <span>気圧: ${weatherData.pressure}hPa</span>
-                        </div>
-                    ` : ''}
-                    ${weatherData.visibility ? `
-                        <div class="flex items-center">
-                            <i class="fas fa-eye text-indigo-400 mr-2"></i>
-                            <span>視程: ${weatherData.visibility}km</span>
-                        </div>
-                    ` : ''}
-                    ${weatherData.clouds ? `
-                        <div class="flex items-center">
-                            <i class="fas fa-cloud text-gray-400 mr-2"></i>
-                            <span>雲量: ${weatherData.clouds}%</span>
-                        </div>
-                    ` : ''}
-                </div>
-            </div>
-        ` : `
-            <div class="text-xs text-gray-300 mb-3">
-                <i class="fas fa-tint mr-1"></i>湿度: ${weatherData.humidity}% | 
-                <i class="fas fa-wind mr-1"></i>風速: ${weatherData.wind_speed}m/s
-                ${windDirection ? ` | <i class="fas fa-compass mr-1"></i>${windDirection}` : ''}
-            </div>
-        `}
+        <div class="text-xs text-gray-300 mb-3">
+            <i class="fas fa-tint mr-1"></i>湿度: ${weatherData.humidity}% | 
+            <i class="fas fa-wind mr-1"></i>風速: ${weatherData.wind_speed}m/s
+            ${windDirection ? ` | <i class="fas fa-compass mr-1"></i>${windDirection}` : ''}
+        </div>
         
         ${updateTime ? `<div class="text-xs text-gray-400 mb-3">最終更新: ${updateTime}</div>` : ''}
         <div id="weather-forecast" class="mt-4 border-t border-white border-opacity-10 pt-3"></div>
@@ -200,12 +158,7 @@ function updateWeatherDisplay() {
     }
 }
 
-// 詳細表示の切り替え
-function toggleDetailedWeather() {
-    showDetailedWeather = !showDetailedWeather;
-    localStorage.setItem('showDetailedWeather', showDetailedWeather);
-    updateWeatherDisplay();
-}
+// 詳細表示機能を削除
 
 // 読み込み中の天気表示
 function showLoadingWeather() {
@@ -326,9 +279,6 @@ function renderForecast(forecast) {
     container.innerHTML = `
         <div class="flex justify-between items-center mb-2">
             <div class="text-xs font-semibold">5日間予報</div>
-            <button onclick="toggleForecastDetail()" class="text-blue-400 hover:text-blue-300 text-xs" title="${showDetailedWeather ? '詳細を隠す' : '詳細を表示'}">
-                <i class="fas fa-${showDetailedWeather ? 'compress' : 'expand'}-alt"></i>
-            </button>
         </div>
         <div class="grid grid-cols-5 gap-2">
             ${forecast.map(day => {
@@ -347,16 +297,7 @@ function renderForecast(forecast) {
                         <div class="text-xs text-gray-300">
                             <span class="text-red-400">${day.temp_max}°</span>/<span class="text-blue-400">${day.temp_min}°</span>
                         </div>
-                        ${showDetailedWeather && day.humidity ? `
-                            <div class="text-xs text-gray-300 mt-1">
-                                <i class="fas fa-tint text-blue-400"></i> ${day.humidity}%
-                            </div>
-                        ` : ''}
-                        ${showDetailedWeather && day.wind_speed ? `
-                            <div class="text-xs text-gray-300">
-                                <i class="fas fa-wind text-gray-400"></i> ${day.wind_speed}m/s
-                            </div>
-                        ` : ''}
+
                     </div>
                 `;
             }).join('')}
@@ -364,12 +305,7 @@ function renderForecast(forecast) {
     `;
 }
 
-// 予報詳細表示の切り替え
-function toggleForecastDetail() {
-    showDetailedWeather = !showDetailedWeather;
-    localStorage.setItem('showDetailedWeather', showDetailedWeather);
-    updateWeatherDisplay();
-}
+// 予報詳細表示機能を削除
 
 // 日別詳細を表示
 function showDayDetail(date, description, temp, tempMax, tempMin, humidity, windSpeed, icon) {
@@ -435,7 +371,6 @@ function hideDayDetail() {
 }
 
 // グローバル関数として公開
-window.toggleForecastDetail = toggleForecastDetail;
 window.showDayDetail = showDayDetail;
 window.hideDayDetail = hideDayDetail;
 
@@ -520,9 +455,6 @@ window.refreshWeather = refreshWeather;
 
 // 初期化
 export function initWeather() {
-    // 詳細表示の設定を読み込み
-    showDetailedWeather = localStorage.getItem('showDetailedWeather') === 'true';
-    
     // 初回読み込み
     getLocationAndWeather();
     
