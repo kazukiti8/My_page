@@ -222,7 +222,10 @@ export function renderCategories() {
     
     // カテゴリーを横並びにするためのコンテナを作成
     const categoriesGrid = document.createElement('div');
-    categoriesGrid.className = 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6';
+    // カテゴリが7つ以上ある場合はスクロール可能にする
+    const shouldScrollCategories = categories.length > 6;
+    // 6つのカテゴリが表示される高さ（約2行分）でスクロール設定
+    categoriesGrid.className = `grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 ${shouldScrollCategories ? 'max-h-[calc(2*theme(spacing.96)+theme(spacing.6))] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-200' : ''}`;
     
     categories.forEach(category => {
         const categoryElement = document.createElement('div');
