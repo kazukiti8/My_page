@@ -37,7 +37,7 @@ class Shortcuts {
         if (e.ctrlKey) keys.push('Ctrl');
         if (e.shiftKey) keys.push('Shift');
         if (e.altKey) keys.push('Alt');
-        if (e.key !== 'Control' && e.key !== 'Shift' && e.key !== 'Alt') {
+        if (e.key && e.key !== 'Control' && e.key !== 'Shift' && e.key !== 'Alt') {
             keys.push(e.key.toUpperCase());
         }
         return keys.join('+');

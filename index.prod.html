@@ -19,8 +19,8 @@
     <link rel="stylesheet" href="css/main.css">
     <link rel="stylesheet" href="css/theme.css">
     
-    <!-- Production Tailwind CSS (minified) -->
-    <script src="https://cdn.tailwindcss.com?plugins=forms,typography,aspect-ratio,line-clamp"></script>
+    <!-- Production Tailwind CSS (local build) -->
+    <link rel="stylesheet" href="css/tailwind.min.css">
     
     <!-- Font Awesome (with integrity check) -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" 
@@ -189,7 +189,7 @@
 
     <!-- Modals -->
     <!-- Add Category Modal -->
-    <div id="category-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-20 hidden">
+    <div id="category-modal" class="fixed inset-0 bg-black bg-opacity-50 items-center justify-center z-20 hidden">
         <div class="bg-white rounded-lg p-6 w-full max-w-md">
             <h3 class="text-xl font-bold mb-4">Add New Category</h3>
             <input id="category-name-input" type="text" placeholder="Category name" 
@@ -202,7 +202,7 @@
     </div>
 
     <!-- Category Settings Modal -->
-    <div id="category-settings-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-20 hidden">
+    <div id="category-settings-modal" class="fixed inset-0 bg-black bg-opacity-50 items-center justify-center z-20 hidden">
         <div class="bg-white rounded-lg p-6 w-full max-w-md">
             <h3 class="text-xl font-bold mb-4">カテゴリー管理</h3>
             <div class="space-y-3 mb-4">
@@ -223,7 +223,7 @@
     </div>
 
     <!-- Add Bookmark Modal -->
-    <div id="bookmark-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-20 hidden">
+    <div id="bookmark-modal" class="fixed inset-0 bg-black bg-opacity-50 items-center justify-center z-20 hidden">
         <div class="bg-white rounded-lg p-6 w-full max-w-md">
             <h3 class="text-xl font-bold mb-4">Add New Bookmark</h3>
             <input id="bookmark-name-input" type="text" placeholder="Bookmark name" 

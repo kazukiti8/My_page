@@ -36,16 +36,9 @@ class FaviconService {
             }
             
         } catch (error) {
-            console.warn('Error getting favicon for:', url, error);
-            
-            // エラーハンドラーを使用
-            if (window.errorHandler) {
-                window.errorHandler.handleError('Favicon', error, {
-                    retry: false,
-                    showToast: false
-                });
-            }
-            
+            // 取得失敗時はエラーを無視し、デフォルトアイコンを返す
+            // console.warn('Error getting favicon for:', url, error);
+            // window.errorHandler.handleError('Favicon', error, { retry: false, showToast: false });
             return this.getDefaultFavicon();
         }
     }

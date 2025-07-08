@@ -6,23 +6,29 @@
   "scripts": {
     "start": "node server.js",
     "dev": "node server.js",
-    "build": "echo 'Build completed - using CDN version for production'",
+    "build": "npx tailwindcss -i ./css/tailwind.css -o ./css/tailwind.min.css --minify",
+    "build:watch": "npx tailwindcss -i ./css/tailwind.css -o ./css/tailwind.min.css --watch",
     "serve": "serve . -p 3000"
   },
-  "keywords": ["start-page", "dashboard", "weather", "bookmarks"],
+  "keywords": [
+    "start-page",
+    "dashboard",
+    "weather",
+    "bookmarks"
+  ],
   "author": "Your Name",
   "license": "MIT",
   "dependencies": {
-    "express": "^4.18.2",
-    "node-fetch": "^3.3.2",
     "cors": "^2.8.5",
-    "dotenv": "^16.3.1"
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "node-fetch": "^3.3.2"
   },
   "devDependencies": {
-    "tailwindcss": "^3.3.0",
-    "postcss": "^8.4.31",
     "autoprefixer": "^10.4.16",
-    "serve": "^14.2.1"
+    "postcss": "^8.4.31",
+    "serve": "^14.2.1",
+    "tailwindcss": "^3.3.0"
   },
   "engines": {
     "node": ">=16.0.0"
