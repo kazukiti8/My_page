@@ -80,15 +80,6 @@ async function fetchWeatherData() {
         console.log('Weather data received:', weatherData); // デバッグログを追加
         lastUpdate = new Date();
         retryCount = 0; // 成功時にリトライカウントをリセット
-        updateWeatherDisplay();
-        
-        // 成功メッセージを表示
-        if (window.showToast) {
-            console.log('Showing success toast: 天気情報を更新しました'); // デバッグログを追加
-            window.showToast.success('天気情報を更新しました');
-        } else {
-            console.log('Toast notification system not available'); // デバッグログを追加
-        }
         
     } catch (error) {
         console.error('Error fetching weather data:', error);
@@ -115,6 +106,18 @@ async function fetchWeatherData() {
 // 天気表示を更新
 function updateWeatherDisplay() {
     if (!weatherData) return;
+
+    // 今日の日付を "YYYY-MM-DD" 形式で取得
+    const today = new Date().toISOString().split('T')[0];
+
+    // 予報データがあれば、今日の最高・最低気温で weatherData を更新
+    if (forecastData && forecastData.length > 0) {
+        const todaysForecast = forecastData.find(day => day.date === today);
+        if (todaysForecast) {
+            weatherData.temp_max = todaysForecast.temp_max;
+            weatherData.temp_min = todaysForecast.temp_min;
+        }
+    }
 
     const weatherContainer = document.getElementById('weather-widget');
     if (!weatherContainer) return;
@@ -283,7 +286,6 @@ async function fetchForecast(lat, lon) {
         }
         const forecast = await response.json();
         forecastData = forecast;
-        renderForecast(forecast);
     } catch (error) {
         console.error('Error fetching forecast:', error);
         
@@ -444,28 +446,78 @@ function showForecastError(errorMessage) {
 }
 
 // 位置情報を取得して天気データを更新
-function getLocationAndWeather() {
-    console.log('getLocationAndWeather called'); // デバッグログを追加
-    
-    if (navigator.geolocation) {
-        console.log('Geolocation is available, requesting position...'); // デバッグログを追加
-        navigator.geolocation.getCurrentPosition(
-            (position) => {
-                const { latitude, longitude } = position.coords;
-                console.log(`Location obtained: ${latitude}, ${longitude}`); // デバッグログを追加
-                fetchWeatherDataWithCoords(latitude, longitude);
-                fetchForecast(latitude, longitude);
-            },
-            (error) => {
-                console.log('Location access denied or failed, using default city. Error:', error.message); // デバッグログを追加
-                fetchWeatherData();
-                fetchForecast();
+async function getLocationAndWeather() {
+    console.log('getLocationAndWeather called');
+    if (isLoading) {
+        console.log('Weather is already loading, skipping getLocationAndWeather');
+        return;
+    }
+
+    isLoading = true;
+    showLoadingWeather();
+
+    const fetchWithLocation = async (lat, lon) => {
+        const weatherPromise = fetchWeatherDataWithCoords(lat, lon);
+        const forecastPromise = fetchForecast(lat, lon);
+        // エラーが発生しても処理が停止しないようにPromise.allSettledを使用
+        await Promise.allSettled([weatherPromise, forecastPromise]);
+    };
+
+    const fetchWithoutLocation = async () => {
+        const weatherPromise = fetchWeatherData();
+        const forecastPromise = fetchForecast();
+        await Promise.allSettled([weatherPromise, forecastPromise]);
+    };
+
+    try {
+        let locationError = false;
+        if (navigator.geolocation) {
+            console.log('Geolocation is available, requesting position...');
+            await new Promise((resolve) => {
+                navigator.geolocation.getCurrentPosition(
+                    async (position) => {
+                        const { latitude, longitude } = position.coords;
+                        console.log(`Location obtained: ${latitude}, ${longitude}`);
+                        await fetchWithLocation(latitude, longitude);
+                        resolve();
+                    },
+                    async (error) => {
+                        console.log('Location access denied or failed, using default city. Error:', error.message);
+                        locationError = true;
+                        await fetchWithoutLocation();
+                        resolve(); // エラーでも処理は継続
+                    }
+                );
+            });
+        } else {
+            console.log('Geolocation not available, using default city');
+            await fetchWithoutLocation();
+        }
+
+        // データ取得が成功したかどうかに基づいて表示を更新
+        if (weatherData) {
+            updateWeatherDisplay();
+            if (window.showToast) {
+                let message = '天気情報を更新しました';
+                if (locationError) {
+                    message += ' (位置情報が使えなかったため、デフォルトの都市)';
+                }
+                window.showToast.success(message);
             }
-        );
-    } else {
-        console.log('Geolocation not available, using default city'); // デバッグログを追加
-        fetchWeatherData();
-        fetchForecast();
+        } else {
+            // fetchWeatherData内でエラー表示がされているはず
+            console.log("Weather data is not available after fetch.");
+        }
+
+    } catch (error) {
+        console.error('An unexpected error occurred in getLocationAndWeather:', error);
+        showWeatherError('天気の取得中に予期せぬエラーが発生しました。');
+    } finally {
+        isLoading = false;
+        // isLoading状態をUIに反映させるために再度呼び出す
+        if (document.getElementById('weather-widget') && weatherData) {
+             updateWeatherDisplay();
+        }
     }
 }
 
@@ -486,7 +538,6 @@ async function fetchWeatherDataWithCoords(lat, lon) {
         weatherData = await response.json();
         console.log('Weather data received:', weatherData); // デバッグログを追加
         lastUpdate = new Date();
-        updateWeatherDisplay();
         
     } catch (error) {
         console.error('Error fetching weather data with coordinates:', error);
@@ -499,22 +550,12 @@ function refreshWeather() {
     console.log('refreshWeather called'); // デバッグログを追加
     if (isLoading) {
         console.log('Weather is already loading, skipping...'); // デバッグログを追加
-        // 既に読み込み中の場合は、ユーザーに通知
         if (window.showToast) {
             window.showToast.info('天気情報を取得中です...');
         }
         return;
     }
-    console.log('Starting weather refresh...'); // デバッグログを追加
-    
-    // 更新開始の通知
-    if (window.showToast) {
-        console.log('Showing toast notification: 天気情報を更新中...'); // デバッグログを追加
-        window.showToast.info('天気情報を更新中...');
-    } else {
-        console.log('Toast notification system not available'); // デバッグログを追加
-    }
-    
+    // 実際の処理はgetLocationAndWeatherに集約
     getLocationAndWeather();
 }
 
