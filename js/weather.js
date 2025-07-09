@@ -56,26 +56,38 @@ function calculateFeelsLike(temp, humidity, windSpeed) {
 
 // 天気データを取得
 async function fetchWeatherData() {
-    if (isLoading) return;
+    console.log('fetchWeatherData called'); // デバッグログを追加
+    if (isLoading) {
+        console.log('Weather is already loading, skipping fetchWeatherData'); // デバッグログを追加
+        return;
+    }
     
+    console.log('Starting weather data fetch...'); // デバッグログを追加
     isLoading = true;
     showLoadingWeather();
     
     try {
+        console.log('Fetching weather from /api/weather'); // デバッグログを追加
         const response = await fetch('/api/weather');
+        console.log(`Weather API response status: ${response.status}`); // デバッグログを追加
+        
         if (!response.ok) {
             const errorData = await response.json().catch(() => ({}));
             throw new Error(errorData.details || `HTTP ${response.status}: ${response.statusText}`);
         }
         
         weatherData = await response.json();
+        console.log('Weather data received:', weatherData); // デバッグログを追加
         lastUpdate = new Date();
         retryCount = 0; // 成功時にリトライカウントをリセット
         updateWeatherDisplay();
         
         // 成功メッセージを表示
         if (window.showToast) {
+            console.log('Showing success toast: 天気情報を更新しました'); // デバッグログを追加
             window.showToast.success('天気情報を更新しました');
+        } else {
+            console.log('Toast notification system not available'); // デバッグログを追加
         }
         
     } catch (error) {
@@ -123,7 +135,7 @@ function updateWeatherDisplay() {
                 <i class="fas fa-external-link-alt ml-2 text-sm opacity-60"></i>
             </div>
             <div class="flex items-center space-x-2">
-                <button onclick="refreshWeather()" class="text-blue-400 hover:text-blue-300 transition-colors" title="天気を更新">
+                <button onclick="refreshWeather()" class="text-blue-400 hover:text-blue-300 transition-colors ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}" title="${isLoading ? '更新中...' : '天気を更新'}" id="weather-refresh-btn">
                     <i class="fas fa-sync-alt ${isLoading ? 'animate-spin' : ''}"></i>
                 </button>
             </div>
@@ -148,13 +160,40 @@ function updateWeatherDisplay() {
             ${windDirection ? ` | <i class="fas fa-compass mr-1"></i>${windDirection}` : ''}
         </div>
         
-        ${updateTime ? `<div class="text-xs text-gray-400 mb-3">最終更新: ${updateTime}</div>` : ''}
+        ${updateTime ? `<div class="text-xs text-gray-400 mb-3">
+            <i class="fas fa-clock mr-1"></i>最終更新: ${updateTime}
+            <span class="ml-2 text-green-400">
+                <i class="fas fa-check-circle mr-1"></i>最新
+            </span>
+        </div>` : ''}
         <div id="weather-forecast" class="mt-4 border-t border-white border-opacity-10 pt-3"></div>
     `;
     
     // 5日間予報を表示
     if (forecastData) {
         renderForecast(forecastData);
+    }
+    
+    // 更新ボタンが正しく生成されたかを確認
+    const refreshBtn = document.getElementById('weather-refresh-btn');
+    if (refreshBtn) {
+        console.log('Weather refresh button found and updated'); // デバッグログを追加
+        // 既存のonclickイベントを削除して新しいイベントリスナーを追加
+        refreshBtn.removeAttribute('onclick');
+        refreshBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            console.log('Weather refresh button clicked'); // デバッグログを追加
+            
+            // ローディング中はクリックを無効にする
+            if (isLoading) {
+                console.log('Weather is loading, ignoring click'); // デバッグログを追加
+                return;
+            }
+            
+            refreshWeather();
+        });
+    } else {
+        console.warn('Weather refresh button not found'); // デバッグログを追加
     }
 }
 
@@ -406,20 +445,25 @@ function showForecastError(errorMessage) {
 
 // 位置情報を取得して天気データを更新
 function getLocationAndWeather() {
+    console.log('getLocationAndWeather called'); // デバッグログを追加
+    
     if (navigator.geolocation) {
+        console.log('Geolocation is available, requesting position...'); // デバッグログを追加
         navigator.geolocation.getCurrentPosition(
             (position) => {
                 const { latitude, longitude } = position.coords;
+                console.log(`Location obtained: ${latitude}, ${longitude}`); // デバッグログを追加
                 fetchWeatherDataWithCoords(latitude, longitude);
                 fetchForecast(latitude, longitude);
             },
             (error) => {
-                console.log('Location access denied, using default city');
+                console.log('Location access denied or failed, using default city. Error:', error.message); // デバッグログを追加
                 fetchWeatherData();
                 fetchForecast();
             }
         );
     } else {
+        console.log('Geolocation not available, using default city'); // デバッグログを追加
         fetchWeatherData();
         fetchForecast();
     }
@@ -427,14 +471,20 @@ function getLocationAndWeather() {
 
 // 座標指定で天気データを取得
 async function fetchWeatherDataWithCoords(lat, lon) {
+    console.log(`fetchWeatherDataWithCoords called with lat: ${lat}, lon: ${lon}`); // デバッグログを追加
     try {
-        const response = await fetch(`/api/weather?lat=${lat}&lon=${lon}`);
+        const url = `/api/weather?lat=${lat}&lon=${lon}`;
+        console.log(`Fetching weather from: ${url}`); // デバッグログを追加
+        const response = await fetch(url);
+        console.log(`Weather API response status: ${response.status}`); // デバッグログを追加
+        
         if (!response.ok) {
             const errorData = await response.json().catch(() => ({}));
             throw new Error(errorData.details || `HTTP ${response.status}: ${response.statusText}`);
         }
         
         weatherData = await response.json();
+        console.log('Weather data received:', weatherData); // デバッグログを追加
         lastUpdate = new Date();
         updateWeatherDisplay();
         
@@ -446,15 +496,36 @@ async function fetchWeatherDataWithCoords(lat, lon) {
 
 // 天気を手動で更新
 function refreshWeather() {
-    if (isLoading) return;
+    console.log('refreshWeather called'); // デバッグログを追加
+    if (isLoading) {
+        console.log('Weather is already loading, skipping...'); // デバッグログを追加
+        // 既に読み込み中の場合は、ユーザーに通知
+        if (window.showToast) {
+            window.showToast.info('天気情報を取得中です...');
+        }
+        return;
+    }
+    console.log('Starting weather refresh...'); // デバッグログを追加
+    
+    // 更新開始の通知
+    if (window.showToast) {
+        console.log('Showing toast notification: 天気情報を更新中...'); // デバッグログを追加
+        window.showToast.info('天気情報を更新中...');
+    } else {
+        console.log('Toast notification system not available'); // デバッグログを追加
+    }
+    
     getLocationAndWeather();
 }
 
 // グローバル関数として公開
 window.refreshWeather = refreshWeather;
+console.log('refreshWeather function registered globally'); // デバッグログを追加
 
 // 初期化
 export function initWeather() {
+    console.log('Initializing weather module...'); // デバッグログを追加
+    
     // 初回読み込み
     getLocationAndWeather();
     
@@ -464,6 +535,21 @@ export function initWeather() {
             getLocationAndWeather();
         }
     }, 30 * 60 * 1000);
+    
+    // 更新ボタンのイベントリスナーを追加（念のため）
+    document.addEventListener('DOMContentLoaded', () => {
+        console.log('Setting up weather refresh button event listeners...'); // デバッグログを追加
+        // 既存のボタンにイベントリスナーを追加
+        const refreshButtons = document.querySelectorAll('[onclick*="refreshWeather"]');
+        refreshButtons.forEach(button => {
+            console.log('Found refresh button:', button); // デバッグログを追加
+            button.addEventListener('click', (e) => {
+                e.preventDefault();
+                console.log('Refresh button clicked via event listener'); // デバッグログを追加
+                refreshWeather();
+            });
+        });
+    });
 }
 
 // グローバルスコープで利用できるようにする

@@ -14,6 +14,10 @@ import errorHandler from './error-handler.js';
 
 function init() {
     try {
+        // トースト通知コンテナの確認
+        const toastContainer = document.getElementById('toast-container');
+        console.log('Toast container found:', !!toastContainer); // デバッグログを追加
+        
         // エラーハンドラーの初期化
         console.log('🔒 エラーハンドリングシステムを初期化中...');
         
@@ -35,8 +39,12 @@ function init() {
         console.log('✅ アプリケーションの初期化が完了しました');
         
         // 成功メッセージを表示
+        console.log('Checking toast notification system...'); // デバッグログを追加
         if (window.showToast) {
+            console.log('Toast system available, showing startup message'); // デバッグログを追加
             window.showToast.success('アプリケーションが正常に起動しました', 2000);
+        } else {
+            console.log('Toast notification system not available'); // デバッグログを追加
         }
         
     } catch (error) {
