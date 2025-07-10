@@ -1,201 +1,295 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>My Serene Start Page</title>
-    <link rel="stylesheet" href="css/main.css">
-    <link rel="stylesheet" href="css/theme.css">
-    <!-- Tailwind CSS - Local build -->
-    <link rel="stylesheet" href="css/tailwind.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-</head>
-<body class="min-h-screen flex flex-col bg-gray-100 text-gray-800 font-sans">
-    <!-- Background image container -->
-    <div id="background" class="fixed inset-0 z-0 bg-cover bg-center transition-opacity duration-1000"></div>
+    <link rel="stylesheet" href="css/main.css" />
     
+    <!-- Tailwind CSS - Local build -->
+    <link rel="stylesheet" href="css/tailwind.min.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+  </head>
+  <body class="min-h-screen flex flex-col bg-gray-100 text-gray-800 font-sans">
+    <!-- Background image container -->
+    <div
+      id="background"
+      class="fixed inset-0 z-0 bg-cover bg-center transition-opacity duration-1000"
+    ></div>
+
     <!-- Main content overlay -->
     <div class="relative z-10 flex-1 flex flex-col">
-        <!-- Header with clock and search -->
-        <header class="p-4 flex flex-col items-center">
-            <div class="w-full max-w-5xl">
-                <div class="w-full relative">
-                    <!-- 検索入力フィールド -->
-                    <input id="search-input" type="text" placeholder="Googleで検索..." 
-                           class="search-box w-full py-4 px-6 rounded-full bg-white bg-opacity-95 text-gray-800 placeholder-gray-500 focus:bg-opacity-100 transition-all duration-300 text-lg shadow-lg">
-                </div>
+      <!-- Header with clock and search -->
+      <header class="p-4 flex flex-col items-center">
+        <div class="w-full max-w-5xl">
+          <div class="w-full relative">
+            <!-- 検索入力フィールド -->
+            <input
+              id="search-input"
+              type="text"
+              placeholder="Googleで検索..."
+              class="search-box w-full py-4 px-6 rounded-full bg-white bg-opacity-95 text-gray-800 placeholder-gray-500 focus:bg-opacity-100 transition-all duration-300 text-lg shadow-lg"
+            />
+          </div>
+        </div>
+      </header>
+
+      <!-- Main content area -->
+      <main
+        class="flex-1 p-4 grid main-layout"
+        style="
+          grid-template-columns: 1fr 3fr 1fr;
+          grid-template-rows: auto auto;
+          grid-template-areas: 'left center right' 'left center-bottom right';
+        "
+      >
+        <!-- Left column - Date, time and weather (placeholder) -->
+        <div class="left-column p-4" style="grid-area: left">
+          <div class="blur-bg rounded-xl p-4 mb-4 text-white">
+            <div class="flex justify-between items-center">
+              <div>
+                <div id="date" class="text-xl font-semibold"></div>
+                <div id="day" class="text-lg"></div>
+              </div>
+              <div id="clock" class="text-xl font-semibold text-right"></div>
             </div>
-        </header>
+          </div>
+          <div
+            id="weather-widget"
+            class="blur-bg rounded-xl p-4 text-white mb-4"
+          >
+            <div class="flex items-center mb-2">
+              <i class="fas fa-cloud-sun text-3xl mr-3"></i>
+              <div>
+                <div class="text-xl font-semibold">天気を取得中...</div>
+                <div class="text-sm">位置情報を確認中</div>
+              </div>
+            </div>
+            <div class="text-2xl font-bold">--°C</div>
+            <div class="text-sm mt-1">H: --° L: --°</div>
+            <div class="text-xs mt-1 text-gray-300">
+              湿度: --% | 風速: --m/s
+            </div>
+            <div
+              id="weather-forecast"
+              class="mt-4 border-t border-white border-opacity-10 pt-2"
+            ></div>
+          </div>
 
-        <!-- Main content area -->
-        <main class="flex-1 p-4 grid main-layout" style="grid-template-columns: 1fr 3fr 1fr; grid-template-rows: auto auto; grid-template-areas: 'left center right' 'left center-bottom right';">
-            <!-- Left column - Date, time and weather (placeholder) -->
-            <div class="left-column p-4" style="grid-area: left;">
-                <div class="blur-bg rounded-xl p-4 mb-4 text-white">
-                    <div class="flex justify-between items-center">
-                        <div>
-                            <div id="date" class="text-xl font-semibold"></div>
-                            <div id="day" class="text-lg"></div>
-                        </div>
-                        <div id="clock" class="text-xl font-semibold text-right"></div>
-                    </div>
-                </div>
-                <div id="weather-widget" class="blur-bg rounded-xl p-4 text-white mb-4">
-                    <div class="flex items-center mb-2">
-                        <i class="fas fa-cloud-sun text-3xl mr-3"></i>
-                        <div>
-                            <div class="text-xl font-semibold">天気を取得中...</div>
-                            <div class="text-sm">位置情報を確認中</div>
-                        </div>
-                    </div>
-                    <div class="text-2xl font-bold">--°C</div>
-                    <div class="text-sm mt-1">H: --° L: --°</div>
-                    <div class="text-xs mt-1 text-gray-300">湿度: --% | 風速: --m/s</div>
-                    <div id="weather-forecast" class="mt-4 border-t border-white border-opacity-10 pt-2"></div>
-                </div>
+          <!-- Google Maps -->
+          <div class="blur-bg rounded-xl p-4 text-white">
+            <div class="flex items-center mb-3">
+              <i class="fas fa-map-marker-alt text-2xl mr-3"></i>
+              <h3 class="text-lg font-semibold">マップ</h3>
+            </div>
+            <div class="map-container" style="height: 200px; overflow: hidden">
+              <iframe
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3240.827853398542!2d139.76454987677598!3d35.68124053757839!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x60188bfbd89f700b%3A0x277c49ba34ed38!2z5p2x5Lqs6aeF!5e0!3m2!1sja!2sjp!4v1703123456789!5m2!1sja!2sjp"
+                style="border: 0; width: 100%; height: 100%"
+                allowfullscreen=""
+                loading="lazy"
+                referrerpolicy="no-referrer-when-downgrade"
+              >
+              </iframe>
+            </div>
+          </div>
+        </div>
 
-                <!-- Google Maps -->
-                <div class="blur-bg rounded-xl p-4 text-white">
-                    <div class="flex items-center mb-3">
-                        <i class="fas fa-map-marker-alt text-2xl mr-3"></i>
-                        <h3 class="text-lg font-semibold">マップ</h3>
-                    </div>
-                    <div class="map-container" style="height: 200px; overflow: hidden;">
-                        <iframe 
-                            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3240.827853398542!2d139.76454987677598!3d35.68124053757839!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x60188bfbd89f700b%3A0x277c49ba34ed38!2z5p2x5Lqs6aeF!5e0!3m2!1sja!2sjp!4v1703123456789!5m2!1sja!2sjp" 
-                            style="border: 0; width: 100%; height: 100%;" 
-                            allowfullscreen="" 
-                            loading="lazy" 
-                            referrerpolicy="no-referrer-when-downgrade">
-                        </iframe>
-                    </div>
-                </div>
+        <!-- Center column - Bookmarks -->
+        <div class="center-column p-4" style="grid-area: center">
+          <div class="blur-bg rounded-xl p-4">
+            <div class="flex justify-between items-center mb-4">
+              <h2 class="text-xl font-bold text-white">My Bookmarks</h2>
+              <div class="flex space-x-2">
+                <button
+                  id="category-settings-btn"
+                  class="bg-gray-500 hover:bg-gray-600 text-white px-3 py-1 rounded-full text-sm flex items-center"
+                  title="カテゴリー管理"
+                >
+                  <i class="fas fa-cog"></i>
+                </button>
+              </div>
             </div>
 
-            <!-- Center column - Bookmarks -->
-            <div class="center-column p-4" style="grid-area: center;">
-                <div class="blur-bg rounded-xl p-4">
-                    <div class="flex justify-between items-center mb-4">
-                        <h2 class="text-xl font-bold text-white">My Bookmarks</h2>
-                        <div class="flex space-x-2">
-                            <button id="category-settings-btn" class="bg-gray-500 hover:bg-gray-600 text-white px-3 py-1 rounded-full text-sm flex items-center" title="カテゴリー管理">
-                                <i class="fas fa-cog"></i>
-                            </button>
-                        </div>
-                    </div>
-
-                    <div id="bookmarks-container">
-                        <!-- Categories will be added here dynamically -->
-                    </div>
-                </div>
+            <div id="bookmarks-container">
+              <!-- Categories will be added here dynamically -->
             </div>
+          </div>
+        </div>
 
-            <!-- Right column - Calendar and News Feed -->
-            <div class="right-column p-4" style="grid-area: right;">
-                <!-- Calendar Section -->
-                <div class="blur-bg rounded-xl p-4 text-white mb-4">
-                    <div class="flex items-center mb-3">
-                        <i class="fas fa-calendar text-2xl mr-3"></i>
-                        <h3 class="text-lg font-semibold">カレンダー</h3>
-                    </div>
-                    <div class="calendar-container" style="height: 200px; overflow: hidden;">
-                        <iframe 
-                            src="https://calendar.google.com/calendar/embed?height=600&wkst=1&ctz=Asia%2FTokyo&showPrint=0&src=cmlyaW5uYmE4QGdtYWlsLmNvbQ&src=amEuamFwYW5lc2UjaG9saWRheUBncm91cC52LmNhbGVuZGFyLmdvb2dsZS5jb20&color=%23039be5&color=%230b8043" 
-                            style="border: 0; width: 100%; height: 100%;" 
-                            frameborder="0" 
-                            scrolling="no">
-                        </iframe>
-                    </div>
-                </div>
-
-                <!-- News Feed Section -->
-                <div class="blur-bg rounded-xl p-4">
-                    <div class="flex justify-between items-center mb-3">
-                        <h3 class="text-lg font-semibold text-white">News Feed</h3>
-                        <div class="flex space-x-2">
-                            <button id="refresh-news-btn" class="text-blue-400 hover:text-blue-300">
-                                <i class="fas fa-sync-alt"></i>
-                            </button>
-                        </div>
-                    </div>
-                    <div id="news-container" class="space-y-3 max-h-64 overflow-y-auto">
-                        <!-- News items will be added here -->
-                        <div class="text-center text-gray-400 text-sm py-4">
-                            <i class="fas fa-newspaper text-2xl mb-2"></i>
-                            <p>ニュースフィードを追加してください</p>
-                        </div>
-                    </div>
-                </div>
+        <!-- Right column - Calendar and News Feed -->
+        <div class="right-column p-4" style="grid-area: right">
+          <!-- Calendar Section -->
+          <div class="blur-bg rounded-xl p-4 text-white mb-4">
+            <div class="flex items-center mb-3">
+              <i class="fas fa-calendar text-2xl mr-3"></i>
+              <h3 class="text-lg font-semibold">カレンダー</h3>
             </div>
-        </main>
+            <div
+              class="calendar-container"
+              style="height: 200px; overflow: hidden"
+            >
+              <iframe
+                src="https://calendar.google.com/calendar/embed?height=600&wkst=1&ctz=Asia%2FTokyo&showPrint=0&src=cmlyaW5uYmE4QGdtYWlsLmNvbQ&src=amEuamFwYW5lc2UjaG9saWRheUBncm91cC52LmNhbGVuZGFyLmdvb2dsZS5jb20&color=%23039be5&color=%230b8043"
+                style="border: 0; width: 100%; height: 100%"
+                frameborder="0"
+                scrolling="no"
+              >
+              </iframe>
+            </div>
+          </div>
+
+          <!-- News Feed Section -->
+          <div class="blur-bg rounded-xl p-4">
+            <div class="flex justify-between items-center mb-3">
+              <h3 class="text-lg font-semibold text-white">News Feed</h3>
+              <div class="flex space-x-2">
+                <button
+                  id="refresh-news-btn"
+                  class="text-blue-400 hover:text-blue-300"
+                >
+                  <i class="fas fa-sync-alt"></i>
+                </button>
+              </div>
+            </div>
+            <div id="news-container" class="space-y-3 max-h-64 overflow-y-auto">
+              <!-- News items will be added here -->
+              <div class="text-center text-gray-400 text-sm py-4">
+                <i class="fas fa-newspaper text-2xl mb-2"></i>
+                <p>ニュースフィードを追加してください</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
     </div>
 
     <!-- Modals -->
 
-
-
     <!-- Day Detail Modal -->
-    <div id="day-detail-modal" class="fixed inset-0 bg-black bg-opacity-50 items-center justify-center z-20 hidden">
-        <!-- Day detail content will be added here dynamically -->
+    <div
+      id="day-detail-modal"
+      class="fixed inset-0 bg-black bg-opacity-50 items-center justify-center z-20 hidden"
+    >
+      <!-- Day detail content will be added here dynamically -->
     </div>
 
     <!-- Add Category Modal -->
-    <div id="category-modal" class="fixed inset-0 bg-black bg-opacity-50 items-center justify-center z-20 hidden">
-        <div class="bg-white rounded-lg p-6 w-full max-w-md">
-            <h3 class="text-xl font-bold mb-4">Add New Category</h3>
-            <input id="category-name-input" type="text" placeholder="Category name" 
-                   class="w-full px-3 py-2 border rounded mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500">
-            <div class="flex justify-end space-x-3">
-                <button id="cancel-category-btn" class="px-4 py-2 text-gray-600 hover:text-gray-800">Cancel</button>
-                <button id="save-category-btn" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">Save</button>
-            </div>
+    <div
+      id="category-modal"
+      class="fixed inset-0 bg-black bg-opacity-50 items-center justify-center z-20 hidden"
+    >
+      <div class="bg-white rounded-lg p-6 w-full max-w-md">
+        <h3 class="text-xl font-bold mb-4">Add New Category</h3>
+        <input
+          id="category-name-input"
+          type="text"
+          placeholder="Category name"
+          class="w-full px-3 py-2 border rounded mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+        <div class="flex justify-end space-x-3">
+          <button
+            id="cancel-category-btn"
+            class="px-4 py-2 text-gray-600 hover:text-gray-800"
+          >
+            Cancel
+          </button>
+          <button
+            id="save-category-btn"
+            class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+          >
+            Save
+          </button>
         </div>
+      </div>
     </div>
 
     <!-- Category Settings Modal -->
-    <div id="category-settings-modal" class="fixed inset-0 bg-black bg-opacity-50 items-center justify-center z-20 hidden">
-        <div class="bg-white rounded-lg p-6 w-full max-w-md">
-            <h3 class="text-xl font-bold mb-4">カテゴリー管理</h3>
-            <div class="space-y-3 mb-4">
-                <button id="add-category-btn" class="w-full bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded flex items-center justify-center">
-                    <i class="fas fa-plus mr-2"></i> カテゴリーを追加
-                </button>
-                <button id="edit-categories-btn" class="w-full bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded flex items-center justify-center">
-                    <i class="fas fa-edit mr-2"></i> カテゴリーを編集
-                </button>
-                <button id="delete-categories-btn" class="w-full bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded flex items-center justify-center">
-                    <i class="fas fa-trash mr-2"></i> カテゴリーを削除
-                </button>
-            </div>
-            <div class="flex justify-end">
-                <button id="close-settings-btn" class="px-4 py-2 text-gray-600 hover:text-gray-800">閉じる</button>
-            </div>
+    <div
+      id="category-settings-modal"
+      class="fixed inset-0 bg-black bg-opacity-50 items-center justify-center z-20 hidden"
+    >
+      <div class="bg-white rounded-lg p-6 w-full max-w-md">
+        <h3 class="text-xl font-bold mb-4">カテゴリー管理</h3>
+        <div class="space-y-3 mb-4">
+          <button
+            id="add-category-btn"
+            class="w-full bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded flex items-center justify-center"
+          >
+            <i class="fas fa-plus mr-2"></i> カテゴリーを追加
+          </button>
+          <button
+            id="edit-categories-btn"
+            class="w-full bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded flex items-center justify-center"
+          >
+            <i class="fas fa-edit mr-2"></i> カテゴリーを編集
+          </button>
+          <button
+            id="delete-categories-btn"
+            class="w-full bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded flex items-center justify-center"
+          >
+            <i class="fas fa-trash mr-2"></i> カテゴリーを削除
+          </button>
         </div>
+        <div class="flex justify-end">
+          <button
+            id="close-settings-btn"
+            class="px-4 py-2 text-gray-600 hover:text-gray-800"
+          >
+            閉じる
+          </button>
+        </div>
+      </div>
     </div>
 
     <!-- Add Bookmark Modal -->
-    <div id="bookmark-modal" class="fixed inset-0 bg-black bg-opacity-50 items-center justify-center z-20 hidden">
-        <div class="bg-white rounded-lg p-6 w-full max-w-md">
-            <h3 class="text-xl font-bold mb-4">Add New Bookmark</h3>
-            <input id="bookmark-name-input" type="text" placeholder="Bookmark name" 
-                   class="w-full px-3 py-2 border rounded mb-3 focus:outline-none focus:ring-2 focus:ring-blue-500">
-            <input id="bookmark-url-input" type="text" placeholder="URL (include https://)" 
-                   class="w-full px-3 py-2 border rounded mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500">
-            <select id="bookmark-category-select" class="w-full px-3 py-2 border rounded mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                <!-- Categories will be populated here -->
-            </select>
-            <div class="flex justify-end space-x-3">
-                <button id="cancel-bookmark-btn" class="px-4 py-2 text-gray-600 hover:text-gray-800">Cancel</button>
-                <button id="save-bookmark-btn" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">Save</button>
-            </div>
+    <div
+      id="bookmark-modal"
+      class="fixed inset-0 bg-black bg-opacity-50 items-center justify-center z-20 hidden"
+    >
+      <div class="bg-white rounded-lg p-6 w-full max-w-md">
+        <h3 class="text-xl font-bold mb-4">Add New Bookmark</h3>
+        <input
+          id="bookmark-name-input"
+          type="text"
+          placeholder="Bookmark name"
+          class="w-full px-3 py-2 border rounded mb-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+        <input
+          id="bookmark-url-input"
+          type="text"
+          placeholder="URL (include https://)"
+          class="w-full px-3 py-2 border rounded mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+        <select
+          id="bookmark-category-select"
+          class="w-full px-3 py-2 border rounded mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          <!-- Categories will be populated here -->
+        </select>
+        <div class="flex justify-end space-x-3">
+          <button
+            id="cancel-bookmark-btn"
+            class="px-4 py-2 text-gray-600 hover:text-gray-800"
+          >
+            Cancel
+          </button>
+          <button
+            id="save-bookmark-btn"
+            class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+          >
+            Save
+          </button>
         </div>
+      </div>
     </div>
-
-
 
     <!-- Toast Notification Container -->
     <div id="toast-container" class="fixed top-4 right-4 z-50 space-y-2"></div>
 
-    <script type="module" src="js/app.js"></script>
-</body>
+    <script src="js/app.js"></script>
+  </body>
 </html>

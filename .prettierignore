@@ -1,0 +1,12 @@
+# Ignore dependencies and build artifacts
+node_modules/
+
+# Ignore logs and process ids
+logs/
+pids/
+
+# Ignore package lock file
+package-lock.json
+
+# Ignore minified CSS file
+css/tailwind.min.css
