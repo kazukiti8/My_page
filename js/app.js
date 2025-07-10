@@ -2363,7 +2363,7 @@ function renderNews() {
                                     <span class="text-xs bg-red-100 text-red-700 px-2 py-1 rounded-full font-medium">
                                         <i class="fas fa-exclamation-triangle mr-1"></i>エラー
                                     </span>
-                                    <span class="text-xs text-gray-500 ml-2">${formatDate(item.pubDate)}</span>
+                                    <span class="text-xs text-gray-500 ml-2">${getRelativeTime(item.pubDate)}</span>
                                 </div>
                             </div>
                             <div class="text-sm font-semibold text-red-700 mb-2">
@@ -2455,28 +2455,7 @@ function cleanNewsTitle(title) {
 }
 
 // 日付をフォーマット
-function formatDate(dateString) {
-  if (!dateString) return '';
 
-  const date = new Date(dateString);
-  const now = new Date();
-  const diffTime = Math.abs(now - date);
-  const diffMinutes = Math.floor(diffTime / (1000 * 60));
-  const diffHours = Math.floor(diffTime / (1000 * 60 * 60));
-  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-  if (diffMinutes < 60) {
-    return `${diffMinutes}分前`;
-  } else if (diffHours < 24) {
-    return `${diffHours}時間前`;
-  } else if (diffDays === 1) {
-    return '昨日';
-  } else if (diffDays <= 7) {
-    return `${diffDays - 1}日前`;
-  } else {
-    return date.toLocaleDateString('ja-JP', { month: 'short', day: 'numeric' });
-  }
-}
 
 // ニュース更新ボタンの設定
 function setupNewsRefresh() {
@@ -2774,6 +2753,22 @@ window.clearFaviconCache = () => faviconService.clearCache();
 function renderCategories() {
   bookmarksContainer.innerHTML = '';
 
+  // カテゴリーコンテナをSortableJSで初期化
+  const categoriesSortable = Sortable.create(bookmarksContainer, {
+    animation: 150,
+    handle: '.category-handle', // ドラッグハンドル
+    onEnd: function (evt) {
+      const oldIndex = evt.oldIndex;
+      const newIndex = evt.newIndex;
+
+      // カテゴリーの並び順を更新
+      const [movedCategory] = categories.splice(oldIndex, 1);
+      categories.splice(newIndex, 0, movedCategory);
+      saveCategories();
+      renderCategories(); // UIを再描画
+    },
+  });
+
   if (categories.length === 0) {
     bookmarksContainer.innerHTML = `
             <div class="text-center py-8 text-white">
@@ -2796,6 +2791,7 @@ function renderCategories() {
 
   // カテゴリーを横並びにするためのコンテナを作成
   const categoriesGrid = document.createElement('div');
+  categoriesGrid.id = 'categories-grid'; // IDを追加
   // カテゴリが7つ以上ある場合はスクロール可能にする
   const shouldScrollCategories = categories.length > 6;
   // 6つのカテゴリが表示される高さ（約2行分）でスクロール設定
@@ -2812,7 +2808,7 @@ function renderCategories() {
 
     const categoryTitle = document.createElement('h3');
     categoryTitle.className =
-      'text-lg font-semibold text-white flex items-center';
+      'text-lg font-semibold text-white flex items-center category-handle cursor-grab'; // ドラッグハンドルクラスを追加
 
     // カテゴリー名に基づくアイコンを取得
     const categoryIcon = getCategoryIcon(category.name);
@@ -2851,15 +2847,54 @@ function renderCategories() {
     categoryHeader.appendChild(categoryActions);
 
     const bookmarksList = document.createElement('div');
+    bookmarksList.id = `bookmarks-list-${category.id}`;
     // ブックマークが4つ以上ある場合はスクロール可能にする
     const shouldScroll = category.bookmarks && category.bookmarks.length > 3;
     bookmarksList.className = `space-y-2 ${shouldScroll ? 'max-h-64 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-200' : ''}`;
+
+    // SortableJSをブックマークリストに適用
+    Sortable.create(bookmarksList, {
+      group: 'bookmarks', // カテゴリー間で移動可能にする
+      animation: 150,
+      dataIdAttr: 'data-bookmark-id', // ブックマークIDを保持する属性
+      onEnd: function (evt) {
+        const itemEl = evt.item; // 移動した要素
+        const oldListId = evt.from.id; // 元のリストのID
+        const newListId = evt.to.id; // 新しいリストのID
+        const oldIndex = evt.oldIndex; // 元のインデックス
+        const newIndex = evt.newIndex; // 新しいインデックス
+
+        const bookmarkId = itemEl.dataset.bookmarkId;
+
+        // 元のカテゴリーと新しいカテゴリーを特定
+        const oldCategoryId = oldListId.replace('bookmarks-list-', '');
+        const newCategoryId = newListId.replace('bookmarks-list-', '');
+
+        let movedBookmark = null;
+
+        // 元のカテゴリーからブックマークを削除
+        const oldCategory = categories.find(c => c.id === oldCategoryId);
+        if (oldCategory) {
+          movedBookmark = oldCategory.bookmarks.splice(oldIndex, 1)[0];
+        }
+
+        // 新しいカテゴリーにブックマークを追加
+        const newCategory = categories.find(c => c.id === newCategoryId);
+        if (newCategory && movedBookmark) {
+          newCategory.bookmarks.splice(newIndex, 0, movedBookmark);
+        }
+
+        saveCategories();
+        renderCategories(); // UIを再描画
+      },
+    });
 
     if (category.bookmarks && category.bookmarks.length > 0) {
       category.bookmarks.forEach((bookmark) => {
         const bookmarkElement = document.createElement('div');
         bookmarkElement.className =
-          'bg-white bg-opacity-70 hover:bg-opacity-90 rounded-lg p-3 transition-all duration-200 bookmark-item relative group cursor-pointer';
+          'bg-white bg-opacity-70 hover:bg-opacity-90 rounded-lg p-3 transition-all duration-200 bookmark-item relative group cursor-grab'; // cursor-grabを追加
+        bookmarkElement.dataset.bookmarkId = bookmark.id;
 
         // カード全体のクリックイベントを追加
         bookmarkElement.addEventListener('click', (e) => {
