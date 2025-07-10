@@ -2575,6 +2575,11 @@ const closeSettingsBtn = document.getElementById('close-settings-btn');
 let categories = JSON.parse(localStorage.getItem('categories')) || [];
 let currentCategoryIdForBookmark = null;
 
+// ブックマーク編集用のグローバル変数
+let isEditMode = false;
+let editingBookmarkId = null;
+let originalCategoryId = null;
+
 // カテゴリーアイコンのマッピング
 const categoryIcons = {
   social: 'fas fa-users',
@@ -2826,6 +2831,10 @@ function renderCategories() {
       'bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded text-xs flex items-center';
     addBookmarkBtn.innerHTML = '<i class="fas fa-plus mr-1"></i> Add';
     addBookmarkBtn.addEventListener('click', () => {
+      isEditMode = false;
+      editingBookmarkId = null;
+      originalCategoryId = null;
+      document.querySelector('#bookmark-modal h3').textContent = 'Add New Bookmark';
       currentCategoryIdForBookmark = category.id;
       bookmarkCategorySelect.innerHTML = '';
       categories.forEach((cat) => {
@@ -2943,7 +2952,12 @@ function renderCategories() {
         editBookmarkBtn.addEventListener('click', (e) => {
           e.preventDefault();
           e.stopPropagation(); // カード全体のクリックイベントを防ぐ
-          currentCategoryIdForBookmark = category.id;
+
+          isEditMode = true;
+          editingBookmarkId = bookmark.id;
+          originalCategoryId = category.id;
+
+          document.querySelector('#bookmark-modal h3').textContent = 'Edit Bookmark';
           bookmarkNameInput.value = bookmark.name;
           bookmarkUrlInput.value = bookmark.url;
 
@@ -2958,48 +2972,6 @@ function renderCategories() {
 
           bookmarkModal.classList.remove('hidden');
           bookmarkModal.classList.add('flex');
-
-          // 編集時は一時的にイベントリスナーを削除して新しいものを追加
-          const originalClickHandler = saveBookmarkBtn.onclick;
-          saveBookmarkBtn.onclick = function () {
-            if (
-              bookmarkNameInput.value.trim() &&
-              bookmarkUrlInput.value.trim()
-            ) {
-              bookmark.name = bookmarkNameInput.value.trim();
-              bookmark.url = bookmarkUrlInput.value.trim();
-
-              // If category changed, move bookmark
-              const newCategoryId = bookmarkCategorySelect.value;
-              if (newCategoryId !== category.id) {
-                // Remove from old category
-                category.bookmarks = category.bookmarks.filter(
-                  (b) => b.id !== bookmark.id
-                );
-
-                // Add to new category
-                const newCategory = categories.find(
-                  (c) => c.id === newCategoryId
-                );
-                if (newCategory) {
-                  if (!newCategory.bookmarks) newCategory.bookmarks = [];
-                  newCategory.bookmarks.push(bookmark);
-                }
-              }
-
-              saveCategories();
-              renderCategories();
-              bookmarkModal.classList.add('hidden');
-              bookmarkModal.classList.remove('flex');
-
-              // Reset form
-              bookmarkNameInput.value = '';
-              bookmarkUrlInput.value = '';
-
-              // Restore original handler
-              saveBookmarkBtn.onclick = originalClickHandler;
-            }
-          };
         });
 
         const deleteBookmarkBtn = document.createElement('button');
@@ -3114,7 +3086,17 @@ function setupBookmarkEvents() {
     categoryModal.classList.remove('flex');
   });
 
-  // Bookmark modal - 新規追加用
+  // Bookmark modal - 新規追加用と編集用を統合
+  let isEditMode = false;
+  let editingBookmarkId = null;
+  let originalCategoryId = null;
+
+  // ブックマーク追加ボタンのイベントリスナー
+  // 各カテゴリーの「Add」ボタンで設定される
+
+  // ブックマーク編集ボタンのイベントリスナー
+  // renderCategories関数内で動的に生成されるeditBookmarkBtnに設定される
+
   saveBookmarkBtn.addEventListener('click', () => {
     if (bookmarkNameInput.value.trim() && bookmarkUrlInput.value.trim()) {
       const url = bookmarkUrlInput.value.trim();
@@ -3123,33 +3105,66 @@ function setupBookmarkEvents() {
           ? url
           : `https://${url}`;
 
-      const newBookmark = {
-        id: Date.now().toString(),
-        name: bookmarkNameInput.value.trim(),
-        url: validUrl,
-      };
+      if (isEditMode) {
+        // 編集モード
+        const newCategoryId = bookmarkCategorySelect.value;
 
-      const categoryId = bookmarkCategorySelect.value;
-      const category = categories.find((c) => c.id === categoryId);
-      if (category) {
-        if (!category.bookmarks) category.bookmarks = [];
-        category.bookmarks.push(newBookmark);
-        saveCategories();
-        renderCategories();
-        bookmarkModal.classList.add('hidden');
-        bookmarkModal.classList.remove('flex');
+        // 元のカテゴリーからブックマークを削除
+        const oldCategory = categories.find(c => c.id === originalCategoryId);
+        if (oldCategory) {
+          oldCategory.bookmarks = oldCategory.bookmarks.filter(b => b.id !== editingBookmarkId);
+        }
 
-        // Reset form
-        bookmarkNameInput.value = '';
-        bookmarkUrlInput.value = '';
+        // 新しいブックマークオブジェクトを作成
+        const updatedBookmark = {
+          id: editingBookmarkId,
+          name: bookmarkNameInput.value.trim(),
+          url: validUrl,
+        };
 
-        // 保存完了メッセージを表示
+        // 新しいカテゴリーにブックマークを追加
+        const newCategory = categories.find(c => c.id === newCategoryId);
+        if (newCategory) {
+          if (!newCategory.bookmarks) newCategory.bookmarks = [];
+          newCategory.bookmarks.push(updatedBookmark);
+        }
+
         if (window.showToast) {
-          window.showToast.success(
-            `ブックマーク「${newBookmark.name}」を追加しました`
-          );
+          window.showToast.success(`ブックマーク「${updatedBookmark.name}」を更新しました`);
+        }
+      } else {
+        // 新規追加モード
+        const newBookmark = {
+          id: Date.now().toString(),
+          name: bookmarkNameInput.value.trim(),
+          url: validUrl,
+        };
+
+        const categoryId = bookmarkCategorySelect.value;
+        const category = categories.find((c) => c.id === categoryId);
+        if (category) {
+          if (!category.bookmarks) category.bookmarks = [];
+          category.bookmarks.push(newBookmark);
+
+          if (window.showToast) {
+            window.showToast.success(
+              `ブックマーク「${newBookmark.name}」を追加しました`
+            );
+          }
         }
       }
+
+      saveCategories();
+      renderCategories();
+      bookmarkModal.classList.add('hidden');
+      bookmarkModal.classList.remove('flex');
+
+      // Reset form and flags
+      bookmarkNameInput.value = '';
+      bookmarkUrlInput.value = '';
+      isEditMode = false;
+      editingBookmarkId = null;
+      originalCategoryId = null;
     }
   });
 
