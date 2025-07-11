@@ -128,7 +128,23 @@ function renderWeatherWidget() {
   container.innerHTML = getMainHTML(weatherState.weatherData, tempMax, tempMin);
 
   if (weatherState.forecastData) {
-    renderForecast(weatherState.forecastData);
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    tomorrow.setHours(0, 0, 0, 0);
+
+    const upcomingForecast = weatherState.forecastData
+      .filter((day) => {
+        const forecastDate = new Date(day.date);
+        forecastDate.setHours(0, 0, 0, 0);
+        return forecastDate >= tomorrow;
+      })
+      .slice(0, 5);
+
+    if (upcomingForecast.length > 0) {
+      renderForecast(upcomingForecast);
+    } else {
+      showForecastError('明日以降の予報データがありません。');
+    }
   } else {
     showForecastError('予報データがありません。');
   }
