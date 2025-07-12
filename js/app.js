@@ -542,6 +542,7 @@ class Toast {
 
   // トースト通知を表示
   show(message, type = 'info', duration = 3000) {
+    return;
     const toast = document.createElement('div');
     toast.className = `toast-notification transform transition-all duration-300 ease-in-out translate-x-full opacity-0`;
 
