@@ -130,14 +130,15 @@ function renderWeatherWidget() {
   if (weatherState.forecastData) {
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
-    tomorrow.setHours(0, 0, 0, 0);
+    
+    // フォーマットを YYYY-MM-DD に統一
+    const year = tomorrow.getFullYear();
+    const month = String(tomorrow.getMonth() + 1).padStart(2, '0');
+    const day = String(tomorrow.getDate()).padStart(2, '0');
+    const tomorrowString = `${year}-${month}-${day}`;
 
     const upcomingForecast = weatherState.forecastData
-      .filter((day) => {
-        const forecastDate = new Date(day.date);
-        forecastDate.setHours(0, 0, 0, 0);
-        return forecastDate >= tomorrow;
-      })
+      .filter(d => d.date >= tomorrowString)
       .slice(0, 5);
 
     if (upcomingForecast.length > 0) {

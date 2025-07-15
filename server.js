@@ -329,9 +329,13 @@ app.get('/api/forecast', async (req, res) => {
       daily[date].wind_speeds.push(item.wind.speed);
     });
 
-    // 各日の最高・最低気温を計算し、正午付近のデータを代表値として使用
+    // Get today's date (UTC) in YYYY-MM-DD format to correctly filter for tomorrow.
+    const todayUTC = new Date().toISOString().split('T')[0];
+
+    // 各日の最高・最低気温を計算し、明日以降の5日間予報を生成
     const result = Object.values(daily)
-      .slice(0, 5)
+      .filter((day) => day.date > todayUTC) // 今日より後の日付のみを対象とする
+      .slice(0, 5) // 最初の5日間を取得
       .map((day) => {
         const temp_min = Math.round(Math.min(...day.temp_mins));
         const temp_max = Math.round(Math.max(...day.temp_maxs));
